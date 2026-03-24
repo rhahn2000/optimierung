@@ -1,0 +1,15 @@
+# Build Ordner (wie gewünscht)
+build/
+bin/
+
+# Kompilierte Objektdateien
+*.o
+*.obj
+
+# Ausführbare Dateien (Windows)
+*.exe
+*.dll
+*.pdb
+
+# IDE spezifische Ordner (optional, aber empfohlen)
+.vscode/
