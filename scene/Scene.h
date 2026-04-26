@@ -34,6 +34,17 @@ class Scene {
          * @return boolean; true if ray hits a triangle
          */
         bool intersect(Ray3df& ray, Intersection_Context<float, 3>& context, int& mat_index);
+        /**
+         * @brief Getter of lights
+         * @return all lights of the scene
+         */
+        const std::vector<Light>& getLights() const;
+        /**
+         * @brief Getter of a specific material
+         * @param index index of the material
+         * @return material
+         */
+        const Material& getMaterial(int index) const;
     private:
         std::vector<Triangle3df> triangles;
         std::vector<Light> lights;

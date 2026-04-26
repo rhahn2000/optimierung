@@ -92,7 +92,7 @@ Vector<FLOAT_TYPE, 3u> Vector<FLOAT_TYPE, N>::cross_product(const Vector<FLOAT_T
           this->vector[0] * v.vector[1] - this->vector[1] * v.vector[0] };
 }
 
-/*
+
 template <class FLOAT_TYPE, size_t N>  
 void Vector<FLOAT_TYPE, N>::normalize() {
   *this /= length(); //  +/- INFINITY if length is (near to) zero
@@ -109,7 +109,7 @@ FLOAT_TYPE Vector<FLOAT_TYPE, N>::angle(size_t axis_1, size_t axis_2) const {
   Vector<FLOAT_TYPE, N> normalized = (1.0f / length()) * *this;
   return atan2( normalized[axis_2], normalized[axis_1] );
 }
-*/
+
 
 
 template <class FLOAT_TYPE, size_t N>
