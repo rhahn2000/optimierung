@@ -5,7 +5,7 @@ project(Raytracer)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(raytracer main.cpp math/math.cc geometry/geometry.cc scene/Scene.cc scene/Material.cc scene/Light.cc io/ObjLoader.cc)
+add_executable(raytracer main.cpp math/math.cc geometry/geometry.cc scene/Scene.cc scene/Material.cc scene/Light.cc io/ObjLoader.cc io/ImageWriter.cc)
 
 add_subdirectory(math)
 add_subdirectory(geometry)

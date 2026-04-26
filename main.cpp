@@ -1,4 +1,5 @@
 #include "io/ObjLoader.h"
+#include "io/ImageWriter.h"
 #include "scene/Scene.h"
 #include <iostream>
 
@@ -46,7 +47,27 @@ int main() {
     } else {
         std::cout << "Kein Treffer fuer Strahl von oben." << std::endl;
     }
+
+    // -----------------------------------------------------------------------
+    // ImageWriter-Test: einfacher RGB-Farbverlauf
+    // -----------------------------------------------------------------------
+    const int width  = 256;
+    const int height = 256;
+
+    std::vector<Vector3df> framebuffer(width * height, Vector3df{0.0f, 0.0f, 0.0f});
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            framebuffer[y * width + x] = Vector3df{
+                static_cast<float>(x) / (width  - 1),  // R: links->rechts
+                static_cast<float>(y) / (height - 1),  // G: oben->unten
+                0.25f                                   // B: konstant
+            };
+        }
+    }
+
+    ImageWriter writer;
+    writer.write_ppm("test_output.ppm", framebuffer, width, height);
  
     return 0;
 }
- 
