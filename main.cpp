@@ -1,6 +1,7 @@
 #include "io/ObjLoader.h"
 #include "io/ImageWriter.h"
 #include "scene/Scene.h"
+#include "core/Camera.h"
 #include <iostream>
 
 #ifndef DATA_PATH
@@ -49,12 +50,46 @@ int main() {
     }
 
     // -----------------------------------------------------------------------
+    // Camera test: render scene with flat material color, no shading
+    // -----------------------------------------------------------------------
+    const int img_width  = 200;
+    const int img_height = 150;
+    const float aspect   = static_cast<float>(img_width) / img_height;
+
+    Vector3df cam_pos    = Vector3df{0.0f, 5.0f, -12.0f};
+    Vector3df cam_target = Vector3df{0.0f, 1.0f,  -1.0f};
+    Vector3df cam_up     = Vector3df{0.0f, 1.0f,  0.0f};
+    Camera camera(cam_pos, cam_target, cam_up, 45.0f, aspect);
+
+    std::vector<Vector3df> render_buffer(img_width * img_height);
+
+    for (int y = 0; y < img_height; y++) {
+        for (int x = 0; x < img_width; x++) {
+            float u = static_cast<float>(x) / (img_width  - 1);
+            float v = static_cast<float>(img_height - 1 - y) / (img_height - 1); // y-Achse umkehren
+
+            Ray3df r = camera.get_ray(u, v);
+            Intersection_Context<float, 3> c;
+            int mi = -1;
+
+            if (scene.intersect(r, c, mi)) {
+                render_buffer[y * img_width + x] = scene.getMaterial(mi).color;
+            } else {
+                render_buffer[y * img_width + x] = Vector3df{0.2f, 0.2f, 0.2f}; // background
+            }
+        }
+    }
+
+    ImageWriter render_writer;
+    render_writer.write_ppm("camera_test.ppm", render_buffer, img_width, img_height);
+
+    // -----------------------------------------------------------------------
     // ImageWriter-Test: einfacher RGB-Farbverlauf
     // -----------------------------------------------------------------------
     const int width  = 256;
     const int height = 256;
 
-    std::vector<Vector3df> framebuffer(width * height, Vector3df{0.0f, 0.0f, 0.0f});
+    std::vector<Vector3df> framebuffer(width * height);
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
