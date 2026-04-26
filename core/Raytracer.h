@@ -4,7 +4,7 @@
 #include "../math/math.h"
 #include "../geometry/geometry.h"
 #include "Camera.h"
-#include "Scene.h"
+#include "../scene/Scene.h"
 #include <vector>
 
 /**
@@ -35,6 +35,11 @@ class Raytracer {
          * @return vector containing the color information 
          */
         Vector3df trace(Ray3df& ray, Scene& scene, int depth);
+        /**
+         * @brief Getter for frame buffer
+         * @return framebuffer
+         */
+        const std::vector<Vector3df>& getFramebuffer() const { return framebuffer; }
     private:
         int max_depth; // maximum of recursive calls
         std::vector<Vector3df> framebuffer; // stores the final image's colors

@@ -2,7 +2,10 @@
 #include "io/ImageWriter.h"
 #include "scene/Scene.h"
 #include "core/Camera.h"
+#include "scene/Light.h"
+#include "core/Raytracer.h"
 #include <iostream>
+#include <chrono>
 
 #ifndef DATA_PATH
 #define DATA_PATH "data/"
@@ -16,7 +19,16 @@ int main() {
     // Datei laden
     // -----------------------------------------------------------------------
     loader.load(std::string(DATA_PATH) + "teapot_n_glass.obj", scene);
- 
+
+    // -----------------------------------------------------------------------
+    // Lichtquelle
+    // -----------------------------------------------------------------------
+    Light light(
+        Vector3df{  0.0f, 15.0f, -8.0f },  // position: hoch und zentriert
+        Vector3df{  1.0f,  1.0f,  1.0f }   // intensity: weißes Licht
+    );
+    scene.addLight(light);
+
     // -----------------------------------------------------------------------
     // Schnittpunkttest: Strahl von oben nach unten, sollte die Szene treffen
     // -----------------------------------------------------------------------
@@ -50,59 +62,31 @@ int main() {
     }
 
     // -----------------------------------------------------------------------
-    // Camera test: render scene with flat material color, no shading
+    // Raytracer
     // -----------------------------------------------------------------------
     const int img_width  = 200;
     const int img_height = 150;
     const float aspect   = static_cast<float>(img_width) / img_height;
 
-    Vector3df cam_pos    = Vector3df{0.0f, 5.0f, -12.0f};
-    Vector3df cam_target = Vector3df{0.0f, 1.0f,  -1.0f};
-    Vector3df cam_up     = Vector3df{0.0f, 1.0f,  0.0f};
+    Vector3df cam_pos    = Vector3df{ 0.0f, 5.0f, -12.0f};
+    Vector3df cam_target = Vector3df{ 0.0f, 1.0f,  -1.0f};
+    Vector3df cam_up     = Vector3df{ 0.0f, 1.0f,   0.0f};
     Camera camera(cam_pos, cam_target, cam_up, 45.0f, aspect);
 
-    std::vector<Vector3df> render_buffer(img_width * img_height);
+    Raytracer raytracer(img_width, img_height, 5);
 
-    for (int y = 0; y < img_height; y++) {
-        for (int x = 0; x < img_width; x++) {
-            float u = static_cast<float>(x) / (img_width  - 1);
-            float v = static_cast<float>(img_height - 1 - y) / (img_height - 1); // y-Achse umkehren
+    auto t_start = std::chrono::high_resolution_clock::now();
+    raytracer.render(camera, scene);
+    auto t_end = std::chrono::high_resolution_clock::now();
 
-            Ray3df r = camera.get_ray(u, v);
-            Intersection_Context<float, 3> c;
-            int mi = -1;
-
-            if (scene.intersect(r, c, mi)) {
-                render_buffer[y * img_width + x] = scene.getMaterial(mi).color;
-            } else {
-                render_buffer[y * img_width + x] = Vector3df{0.2f, 0.2f, 0.2f}; // background
-            }
-        }
-    }
-
-    ImageWriter render_writer;
-    render_writer.write_ppm("camera_test.ppm", render_buffer, img_width, img_height);
-
-    // -----------------------------------------------------------------------
-    // ImageWriter-Test: einfacher RGB-Farbverlauf
-    // -----------------------------------------------------------------------
-    const int width  = 256;
-    const int height = 256;
-
-    std::vector<Vector3df> framebuffer(width * height);
-
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            framebuffer[y * width + x] = Vector3df{
-                static_cast<float>(x) / (width  - 1),  // R: links->rechts
-                static_cast<float>(y) / (height - 1),  // G: oben->unten
-                0.25f                                   // B: konstant
-            };
-        }
-    }
+    double seconds = std::chrono::duration<double>(t_end - t_start).count();
+    int min = static_cast<int>(seconds) / 60;
+    int sec = static_cast<int>(seconds) % 60;
+    int ms  = static_cast<int>((seconds - static_cast<int>(seconds)) * 1000);
+    std::cout << "Render time: " << min << " min " << sec << " sec " << ms << " ms" << std::endl;
 
     ImageWriter writer;
-    writer.write_ppm("test_output.ppm", framebuffer, width, height);
+    writer.write_ppm("raytracer_output.ppm", raytracer.getFramebuffer(), img_width, img_height);
  
     return 0;
 }

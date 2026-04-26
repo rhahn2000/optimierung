@@ -3,6 +3,8 @@
 ## 26/04/26
 - Einlesen von Objektdateien implementiert
 - ImageWriter implementiert
+- Kamera implementiert
+- Raytracer implementiert
 
 ## 25/04/26
 - Struktur festgelegt
