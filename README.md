@@ -1,5 +1,8 @@
 # Bericht
 
+## 26/04/26
+- Einlesen von Objektdateien implementiert
+
 ## 25/04/26
 - Struktur festgelegt
     ```text
