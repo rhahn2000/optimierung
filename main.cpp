@@ -6,6 +6,7 @@
 #include "core/Raytracer.h"
 #include <iostream>
 #include <chrono>
+#include <cmath>
 
 #ifndef DATA_PATH
 #define DATA_PATH "data/"
@@ -16,56 +17,69 @@ int main() {
     ObjLoader loader;
  
     // -----------------------------------------------------------------------
-    // Datei laden
+    // Load OBJ file
     // -----------------------------------------------------------------------
     loader.load(std::string(DATA_PATH) + "teapot_n_glass.obj", scene);
 
     // -----------------------------------------------------------------------
-    // Lichtquelle
+    // Light source
     // -----------------------------------------------------------------------
     Light light(
-        Vector3df{  0.0f, 15.0f, -8.0f },  // position: hoch und zentriert
-        Vector3df{  1.0f,  1.0f,  1.0f }   // intensity: weißes Licht
+        Vector3df{  0.0f, 15.0f, -8.0f },
+        Vector3df{  1.0f,  1.0f,  1.0f }
     );
     scene.addLight(light);
 
     // -----------------------------------------------------------------------
-    // Schnittpunkttest: Strahl von oben nach unten, sollte die Szene treffen
+    // Intersection test: Badouel vs. Möller-Trumbore comparison
     // -----------------------------------------------------------------------
     Ray3df ray{ Vector3df{0.0f, 10.0f, 0.0f}, Vector3df{0.0f, -1.0f, 0.0f} };
-    Intersection_Context<float, 3> ctx;
-    int mat_idx = -1;
- 
-    if (scene.intersect(ray, ctx, mat_idx)) {
-        const Material& m = scene.getMaterial(mat_idx);
-        std::cout << "Treffer!" << std::endl;
-        std::cout << "  t              = " << ctx.t << std::endl;
-        std::cout << "  Schnittpunkt   = ("
-                  << ctx.intersection[0] << ", "
-                  << ctx.intersection[1] << ", "
-                  << ctx.intersection[2] << ")" << std::endl;
-        std::cout << "  Normale        = ("
-                  << ctx.normal[0] << ", "
-                  << ctx.normal[1] << ", "
-                  << ctx.normal[2] << ")" << std::endl;
-        std::cout << "  Dreieck-Index  = " << mat_idx << std::endl;
-        std::cout << "  Farbe          = ("
-                  << m.color[0] << ", "
-                  << m.color[1] << ", "
-                  << m.color[2] << ")" << std::endl;
-        std::cout << "  Reflektivitaet = " << m.reflectivity << std::endl;
-        std::cout << "  Shininess      = " << m.shininess << std::endl;
-        std::cout << "  Brechungsindex = " << m.refraction_index << std::endl;
-        std::cout << "  Transparenz    = " << m.transparency << std::endl;
-    } else {
-        std::cout << "Kein Treffer fuer Strahl von oben." << std::endl;
+
+    Intersection_Context<float, 3> ctx_badouel, ctx_mt;
+    int mat_idx_badouel = -1, mat_idx_mt = -1;
+
+    bool hit_badouel = scene.intersect(ray, ctx_badouel, mat_idx_badouel);
+    bool hit_mt      = scene.intersect_mt(ray, ctx_mt, mat_idx_mt);
+
+    auto print_hit = [&](const std::string& name, bool hit,
+                         const Intersection_Context<float,3>& ctx, int mat_idx) {
+        if (hit) {
+            const Material& m = scene.getMaterial(mat_idx);
+            std::cout << "[" << name << "] Hit!" << std::endl;
+            std::cout << "  t            = " << ctx.t << std::endl;
+            std::cout << "  intersection = ("
+                      << ctx.intersection[0] << ", "
+                      << ctx.intersection[1] << ", "
+                      << ctx.intersection[2] << ")" << std::endl;
+            std::cout << "  normal       = ("
+                      << ctx.normal[0] << ", "
+                      << ctx.normal[1] << ", "
+                      << ctx.normal[2] << ")" << std::endl;
+            std::cout << "  triangle idx = " << mat_idx << std::endl;
+            std::cout << "  color        = ("
+                      << m.color[0] << ", " << m.color[1] << ", " << m.color[2] << ")"
+                      << std::endl;
+        } else {
+            std::cout << "[" << name << "] No hit." << std::endl;
+        }
+    };
+
+    print_hit("Badouel", hit_badouel, ctx_badouel, mat_idx_badouel);
+    std::cout << std::endl;
+    print_hit("Moeller-Trumbore", hit_mt, ctx_mt, mat_idx_mt);
+
+    // Verify both methods agree
+    if (hit_badouel && hit_mt) {
+        float dt = std::abs(ctx_badouel.t - ctx_mt.t);
+        std::cout << "\nDeviation t: " << dt
+                  << (dt < 1e-3f ? " -> OK" : " -> MISMATCH!") << std::endl;
     }
 
     // -----------------------------------------------------------------------
-    // Raytracer
+    // Raytracer (uses intersect_mt internally)
     // -----------------------------------------------------------------------
-    const int img_width  = 200;
-    const int img_height = 150;
+    const int img_width  = 800;
+    const int img_height = 600;
     const float aspect   = static_cast<float>(img_width) / img_height;
 
     Vector3df cam_pos    = Vector3df{ 0.0f, 5.0f, -12.0f};
@@ -75,6 +89,7 @@ int main() {
 
     Raytracer raytracer(img_width, img_height, 5);
 
+    std::cout << "\nStarting render..." << std::endl;
     auto t_start = std::chrono::high_resolution_clock::now();
     raytracer.render(camera, scene);
     auto t_end = std::chrono::high_resolution_clock::now();

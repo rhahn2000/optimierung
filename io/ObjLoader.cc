@@ -134,7 +134,7 @@ void ObjLoader::load(std::string path, Scene& scene) {
                                   normals[vn_idx[i + 1]])
                     : Triangle3df(va, vb, vc);
 
-                scene.addTriangle(tri, mat);
+                scene.addTriangle(tri, mat, va, vb, vc);
             }
         }
         // Ignore: g, s, o, vt, #, and other tokens

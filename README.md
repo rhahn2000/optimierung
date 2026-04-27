@@ -5,6 +5,7 @@
 - ImageWriter implementiert
 - Kamera implementiert
 - Raytracer implementiert
+- Möller Trumbore implementiert für Schnittpunktberechnung-Optimierung
 
 ## 25/04/26
 - Struktur festgelegt
