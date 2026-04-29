@@ -12,7 +12,7 @@ void Raytracer::render(Camera cam, Scene scene) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float u = static_cast<float>(x) / (width  - 1);
-            float v = static_cast<float>(height - 1 - y) / (height - 1); // flip y
+            float v = static_cast<float>(height - 1 - y) / (height - 1);
 
             Ray3df ray = cam.get_ray(u, v);
             framebuffer[y * width + x] = trace(ray, scene, max_depth);
@@ -29,7 +29,6 @@ static std::vector<Light> find_visible_lights(
     const float EPSILON = 1e-3f;
 
     for (const Light& light : scene.getLights()) {
-        // Shadow ray from hit point towards light (offset by epsilon to avoid self-intersection / shadow acne)
         Vector3df shadow_dir = light.position - ctx.intersection;
         float dist_to_light  = shadow_dir.length();
         shadow_dir.normalize();
@@ -72,7 +71,6 @@ static Vector3df lambertian(
         l.normalize();
 
         float cos_theta = std::max(0.0f, ctx.normal * l);
-        // element-wise multiply light intensity with material color
         diffuse_sum += cos_theta * Vector3df{
             light.intensity[0] * mat.color[0],
             light.intensity[1] * mat.color[1],
@@ -80,13 +78,13 @@ static Vector3df lambertian(
         };
     }
 
-    // Average over all lights (including shadowed ones) to prevent overflow
+    // Average over all lights to prevent overexposure
     color += mat.color[0] > 0.0f || mat.color[1] > 0.0f || mat.color[2] > 0.0f
         ? (mat.reflectivity < 1.0f ? (1.0f - mat.reflectivity) : 1.0f)
           * (1.0f / total_lights) * diffuse_sum
         : diffuse_sum;
 
-    // Clamp
+    // clamp color values to <1
     color[0] = std::min(color[0], 1.0f);
     color[1] = std::min(color[1], 1.0f);
     color[2] = std::min(color[2], 1.0f);
@@ -119,7 +117,7 @@ Vector3df Raytracer::trace(Ray3df& ray, Scene& scene, int depth) {
     const Material& mat = scene.getMaterial(mat_idx);
     Vector3df color{0.0f, 0.0f, 0.0f};
 
-    // --- Reflection ---
+    // reflection
     if (mat.reflectivity > 0.0f) {
         Vector3df refl_dir = ray.direction.get_reflective(ctx.normal);
         Vector3df refl_origin = ctx.intersection + EPSILON * ctx.normal;
@@ -127,14 +125,15 @@ Vector3df Raytracer::trace(Ray3df& ray, Scene& scene, int depth) {
         color += mat.reflectivity * trace(refl_ray, scene, depth - 1);
     }
 
-    // --- Transmission / Refraction (Whitted-style with Schlick) ---
+    // transmission
     if (mat.transparency > 0.0f) {
-        // Determine if ray is entering or leaving the material
+        // check if ray is entering and calculate normal
         bool entering    = (ray.direction * ctx.normal) < 0.0f;
         float eta1       = entering ? 1.0f : mat.refraction_index;
         float eta2       = entering ? mat.refraction_index : 1.0f;
         Vector3df normal = entering ? ctx.normal : Vector3df{-ctx.normal[0], -ctx.normal[1], -ctx.normal[2]};
 
+        // calculate the amount of light is reflected
         float cos_theta = std::max(0.0f, -(ray.direction * normal));
         float R = schlick(cos_theta, eta1, eta2);
 
@@ -142,26 +141,25 @@ Vector3df Raytracer::trace(Ray3df& ray, Scene& scene, int depth) {
         bool total_internal_reflection = !refract(eta1 / eta2, normal, ray.direction, refr_transmission);
 
         if (!total_internal_reflection) {
-            // Refracted ray
             refr_transmission.normalize();
             Vector3df refr_origin = ctx.intersection - EPSILON * normal;
             Ray3df refr_ray{ refr_origin, refr_transmission };
             color += mat.transparency * (1.0f - R) * trace(refr_ray, scene, depth - 1);
         }
 
-        // Reflective part of transparent surface (Schlick)
+        // reflective part of transparent surface
         Vector3df refl_dir = ray.direction.get_reflective(normal);
         Vector3df refl_origin = ctx.intersection + EPSILON * normal;
         Ray3df refl_ray{ refl_origin, refl_dir };
         color += mat.transparency * R * trace(refl_ray, scene, depth - 1);
     }
 
-    // --- Lambertian diffuse shading + shadows ---
+    // lambertian diffuse shading + shadows
     std::vector<Light> visible_lights = find_visible_lights(ctx, scene);
     int total_lights = static_cast<int>(scene.getLights().size());
     color += lambertian(ctx, mat, visible_lights, total_lights);
 
-    // Clamp final color
+    // clamp final color
     color[0] = std::min(color[0], 1.0f);
     color[1] = std::min(color[1], 1.0f);
     color[2] = std::min(color[2], 1.0f);

@@ -2,23 +2,21 @@
 #include <cmath>
 
 Camera::Camera(Vector3df& position, Vector3df& target, Vector3df& vup, float vangle, float aspectRatio) {
-    // Vertical viewport extent based on vertical FOV
     float theta      = vangle * static_cast<float>(PI) / 180.0f;
     float half_h     = std::tan(theta / 2.0f);
     float half_w     = aspectRatio * half_h;
 
     // Local camera coordinate system (right-handed)
-    // w: points from target to camera position (i.e. "backwards")
+    // w = points from target to camera position
     Vector3df w = position - target;
     w.normalize();
 
-    // u: right vector
+    // u = right vector
     Vector3df u = vup.cross_product(w);
     u.normalize();
 
-    // v: true up vector
+    // v = true up vector
     Vector3df v = w.cross_product(u);
-    // v is already normalized since w and u are orthonormal
 
     origin            = position;
     horizontal        = 2.0f * half_w  * u;
@@ -27,8 +25,6 @@ Camera::Camera(Vector3df& position, Vector3df& target, Vector3df& vup, float van
 }
 
 Ray3df Camera::get_ray(float u, float v) {
-    // u, v normalized in [0, 1]
-    // direction from origin to point on image plane
     Vector3df direction = lower_left_corner + u * horizontal + v * vertical - origin;
     direction.normalize();
     return Ray3df{ origin, direction };

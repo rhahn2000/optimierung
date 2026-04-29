@@ -49,35 +49,33 @@ bool Scene::intersect_mt(Ray3df& ray, Intersection_Context<float, 3>& context, i
     for (size_t i = 0; i < triangles_mt.size(); i++) {
         const TriangleMT& tri = triangles_mt[i];
  
+        // calculate edges
         Vector3df E1 = tri.b - tri.a;
         Vector3df E2 = tri.c - tri.a;
  
-        // h = D x E2
+        // calculate determinante
         Vector3df h = ray.direction.cross_product(E2);
- 
-        // Determinante a = E1 · h
         float a = E1 * h;
  
-        // ray parallel to triangle -> no hit
+        // check if ray is parallel to determinante
         if (std::fabs(a) < EPSILON) continue;
  
+        // calculate u 
         float f = 1.0f / a;
- 
-        // s = O - A
         Vector3df s = ray.origin - tri.a;
- 
-        // u = f * (s · h)
         float u = f * (s * h);
+
+        // check if u is inside triangle
         if (u < 0.0f || u > 1.0f) continue;
  
-        // q = s x E1
+        // calculate v
         Vector3df q = s.cross_product(E1);
- 
-        // v = f * (D · q)
         float v = f * (ray.direction * q);
+
+        // check if v is inside the triangle
         if (v < 0.0f || u + v > 1.0f) continue;
  
-        // t = f * (E2 · q)
+        // calculate t (distance to intersection)
         float t = f * (E2 * q);
  
         if (t > 1e-4f && t < t_min) {
@@ -90,7 +88,7 @@ bool Scene::intersect_mt(Ray3df& ray, Intersection_Context<float, 3>& context, i
             context.v = v;
             context.intersection = ray.origin + t * ray.direction;
  
-            // Normal = E1 x E2
+            // calculate normal
             context.normal = E1.cross_product(E2);
             context.normal.normalize();
  

@@ -12,17 +12,15 @@ void ObjLoader::load(std::string path, Scene& scene) {
         return;
     }
 
-    // Raw data from the .obj file
+    // raw object data
     std::vector<Vector3df> vertices;
     std::vector<Vector3df> normals;
 
-    // Material storage: name -> Material
     std::map<std::string, Material> material_map;
     std::string current_material = "";
 
-    // Default material (fallback if no mtl is loaded)
     Material default_material(
-        Vector3df{0.8f, 0.8f, 0.8f},  // color
+        Vector3df{0.8f, 0.8f, 0.8f},    // color
         0.0f,                           // reflectivity
         1.0f,                           // shininess
         1.0f,                           // refraction_index
@@ -41,7 +39,6 @@ void ObjLoader::load(std::string path, Scene& scene) {
         iss >> token;
 
         if (token == "mtllib") {
-            // Load the .mtl file from the same directory as the .obj
             std::string mtl_filename;
             iss >> mtl_filename;
 
@@ -55,22 +52,19 @@ void ObjLoader::load(std::string path, Scene& scene) {
             iss >> current_material;
 
         } else if (token == "v") {
-            // Vertex position
+            // vertex position
             float x, y, z;
             iss >> x >> y >> z;
             vertices.push_back(Vector3df{x, y, z});
 
         } else if (token == "vn") {
-            // Vertex normal
+            // vertex normal
             float x, y, z;
             iss >> x >> y >> z;
             normals.push_back(Vector3df{x, y, z});
 
         } else if (token == "f") {
-            // Face - supports formats:
-            //   f v1 v2 v3
-            //   f v1//vn1 v2//vn2 v3//vn3
-            //   f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3
+            // face
             std::vector<int> v_idx, vn_idx;
             std::string part;
 
@@ -105,8 +99,7 @@ void ObjLoader::load(std::string path, Scene& scene) {
                 }
             }
 
-            // Triangulate: fan triangulation for polygons (ngons)
-            // For triangles this is just one iteration
+            // Triangulate
             for (size_t i = 1; i + 1 < v_idx.size(); i++) {
                 Vector3df va = vertices[v_idx[0]];
                 Vector3df vb = vertices[v_idx[i]];
@@ -137,7 +130,6 @@ void ObjLoader::load(std::string path, Scene& scene) {
                 scene.addTriangle(tri, mat, va, vb, vc);
             }
         }
-        // Ignore: g, s, o, vt, #, and other tokens
     }
 
     std::cout << "ObjLoader: Loaded " << path << std::endl;
@@ -151,13 +143,13 @@ void ObjLoader::loadMTL(const std::string& path, std::map<std::string, Material>
     }
 
     std::string current_name = "";
-    // Intermediate storage while parsing a material block
     Vector3df Kd{0.8f, 0.8f, 0.8f};
     Vector3df Ks{0.0f, 0.0f, 0.0f};
     float Ns = 1.0f;
     float d  = 1.0f;
     float Ni = 1.0f;
 
+    // lambda to save material in map
     auto flush_material = [&]() {
         if (current_name.empty()) return;
         float reflectivity  = (Ks[0] + Ks[1] + Ks[2]) / 3.0f;
@@ -170,7 +162,7 @@ void ObjLoader::loadMTL(const std::string& path, std::map<std::string, Material>
     while (std::getline(file, line)) {
         if (!line.empty() && line.back() == '\r') line.pop_back();
 
-        // Strip inline comments (e.g. "Kd 0.8 0.8 0.8  # white")
+        // Strip inline comments
         size_t comment = line.find('#');
         if (comment != std::string::npos) line = line.substr(0, comment);
 
@@ -179,7 +171,7 @@ void ObjLoader::loadMTL(const std::string& path, std::map<std::string, Material>
         iss >> token;
 
         if (token == "newmtl") {
-            flush_material();          // save previous material
+            flush_material();
             iss >> current_name;
             // reset defaults for new material
             Kd = Vector3df{0.8f, 0.8f, 0.8f};
@@ -197,7 +189,6 @@ void ObjLoader::loadMTL(const std::string& path, std::map<std::string, Material>
         } else if (token == "Ni") {
             iss >> Ni;
         }
-        // Ka, illum etc. are ignored
     }
-    flush_material(); // save last material
+    flush_material(); 
 }
