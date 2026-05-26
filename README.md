@@ -1,5 +1,8 @@
 # Bericht
 
+## 27/05/26
+- Tests hinzugefügt
+
 ## 26/04/26
 - Einlesen von Objektdateien implementiert
 - ImageWriter implementiert
