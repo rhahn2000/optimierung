@@ -7,8 +7,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_executable(raytracer main.cpp math/math.cc geometry/geometry.cc scene/Scene.cc scene/Material.cc scene/Light.cc io/ObjLoader.cc io/ImageWriter.cc core/Camera.cc core/Raytracer.cc)
 
+enable_testing()
+
 add_subdirectory(math)
 add_subdirectory(geometry)
+add_subdirectory(core)
+add_subdirectory(io)
+add_subdirectory(scene)
 
 target_include_directories(raytracer PRIVATE ${CMAKE_SOURCE_DIR})
 

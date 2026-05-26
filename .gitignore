@@ -13,3 +13,9 @@ bin/
 
 # IDE spezifische Ordner (optional, aber empfohlen)
 .vscode/
+
+# Test Coverage Dateien
+LastCoverageResults.log
+coverage.xml
+coverage_scene.xml
+coverage_io.xml
