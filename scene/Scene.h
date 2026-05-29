@@ -8,7 +8,7 @@
 #include <vector>
 #include <array>
 
-#include "../core/KDTree.h"
+// #include "../core/KDTree.h"
 
 /**
  * @class Scene
@@ -59,7 +59,7 @@ class Scene {
          * @brief builds the kd tree after objloader finished
          * @return void
          */
-        void build_kd_tree();
+        // void build_kd_tree();
         /**
          * @brief Getter of lights
          * @return all lights of the scene
@@ -79,9 +79,9 @@ class Scene {
             Vector3df a, b, c;
         };
         std::vector<TriangleMT> triangles_mt;
-        std::vector<Vector3df> vertices_a;
-        std::vector<Vector3df> vertices_b;
-        std::vector<Vector3df> vertices_c;
-        KDTree kd_tree;
+        // std::vector<Vector3df> vertices_a;
+        // std::vector<Vector3df> vertices_b;
+        // std::vector<Vector3df> vertices_c;
+        // KDTree kd_tree;
 };
 #endif
