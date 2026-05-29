@@ -8,6 +8,8 @@
 #include <vector>
 #include <array>
 
+#include "../core/KDTree.h"
+
 /**
  * @class Scene
  * @brief Scene class. Contains all objects of the enviornment/image for the ray tracer. 
@@ -54,6 +56,11 @@ class Scene {
          */
         bool intersect_mt(Ray3df& ray, Intersection_Context<float, 3>& context, int& mat_index);
         /**
+         * @brief builds the kd tree after objloader finished
+         * @return void
+         */
+        void build_kd_tree();
+        /**
          * @brief Getter of lights
          * @return all lights of the scene
          */
@@ -72,5 +79,9 @@ class Scene {
             Vector3df a, b, c;
         };
         std::vector<TriangleMT> triangles_mt;
+        std::vector<Vector3df> vertices_a;
+        std::vector<Vector3df> vertices_b;
+        std::vector<Vector3df> vertices_c;
+        KDTree kd_tree;
 };
 #endif
