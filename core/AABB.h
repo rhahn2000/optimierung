@@ -36,17 +36,13 @@ struct AABB {
 
     /**
      * @brief calculates aabb for a specific triangle
-     * @param t the triangle
      * @param a corner of triangle
      * @param b corner of triangle
      * @param c corner of triangle
      * @return AABB for triangle
      */
-    static AABB from_triangle(const Triangle3df& t, const Vector3df& a, const Vector3df& b, const Vector3df& c);
+    static AABB from_triangle(const Vector3df& a, const Vector3df& b, const Vector3df& c);
 
-    /**
-     * Hocheffizienter Slab-Test für den k-d-Baum
-     */
     /**
      * @brief checks whether ray has intersection with aabb
      * @param ray the ray to check
