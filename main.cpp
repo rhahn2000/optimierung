@@ -8,44 +8,70 @@
 #include <chrono>
 #include <cmath>
 #include "core/AABB.h"
+#include "core/KDTree.h"
  
 
 #ifndef DATA_PATH
 #define DATA_PATH "data/"
 #endif
 int main() {
-     // --- from_triangle ---
-    Vector3df a = {0.0f, 0.0f, 0.0f};
-    Vector3df b = {2.0f, 4.0f, 0.0f};
-    Vector3df c = {4.0f, 0.0f, 3.0f};
-    AABB box = AABB::from_triangle(a, b, c);
-    std::cout << "from_triangle:\n";
-    std::cout << "  min: " << box.min_pt[0] << " " << box.min_pt[1] << " " << box.min_pt[2] << "\n";
-    std::cout << "  max: " << box.max_pt[0] << " " << box.max_pt[1] << " " << box.max_pt[2] << "\n";
-    // expected: min=(0,0,0)  max=(4,4,3)
+    // small scene: 3 triangles in the XY-plane, spread along the X-axis
+    std::vector<Triangle3df> triangles;
+    std::vector<Vector3df> va, vb, vc;
  
-    // --- grow ---
-    box.grow({-1.0f, 5.0f, 10.0f});
-    std::cout << "after grow(-1, 5, 10):\n";
-    std::cout << "  min: " << box.min_pt[0] << " " << box.min_pt[1] << " " << box.min_pt[2] << "\n";
-    std::cout << "  max: " << box.max_pt[0] << " " << box.max_pt[1] << " " << box.max_pt[2] << "\n";
-    // expected: min=(-1,0,0)  max=(4,5,10)
+    // triangle 0 – left  (x: -3..-1)
+    va.push_back({-3.0f, -1.0f, 0.0f});
+    vb.push_back({-2.0f,  1.0f, 0.0f});
+    vc.push_back({-1.0f, -1.0f, 0.0f});
+    triangles.emplace_back(va[0], vb[0], vc[0]);
  
-    // --- slab test: ray hits box ---
-    Ray3df ray_hit{ {2.0f, 2.0f, -5.0f}, {0.0f, 0.0f, 1.0f} };
-    float t_min, t_max;
-    bool hit = box.intersect(ray_hit, t_min, t_max);
-    std::cout << "\nray hits box (expected: 1): " << hit << "  t_min=" << t_min << " t_max=" << t_max << "\n";
+    // triangle 1 – center  (x: -0.5..0.5)
+    va.push_back({-0.5f, -1.0f, 0.0f});
+    vb.push_back({ 0.0f,  1.0f, 0.0f});
+    vc.push_back({ 0.5f, -1.0f, 0.0f});
+    triangles.emplace_back(va[1], vb[1], vc[1]);
  
-    // --- slab test: ray misses box ---
-    Ray3df ray_miss{ {10.0f, 10.0f, -5.0f}, {0.0f, 0.0f, 1.0f} };
-    hit = box.intersect(ray_miss, t_min, t_max);
-    std::cout << "ray misses box (expected: 0): " << hit << "\n";
+    // triangle 2 – right (x: 1..3)
+    va.push_back({1.0f, -1.0f, 0.0f});
+    vb.push_back({2.0f,  1.0f, 0.0f});
+    vc.push_back({3.0f, -1.0f, 0.0f});
+    triangles.emplace_back(va[2], vb[2], vc[2]);
  
-    // --- slab test: box behind ray origin ---
-    Ray3df ray_behind{ {2.0f, 2.0f, 20.0f}, {0.0f, 0.0f, 1.0f} };
-    hit = box.intersect(ray_behind, t_min, t_max);
-    std::cout << "box behind ray  (expected: 0): " << hit << "\n";
+    KDTree tree;
+    tree.build(triangles, va, vb, vc);
+    std::cout << "tree built\n";
+ 
+    Intersection_Context<float, 3> context{};
+    int mat_index = -1;
+ 
+    // ray from above hitting triangle 1 (center)
+    Ray3df ray1{ {0.0f, 0.0f, 5.0f}, {0.0f, 0.0f, -1.0f} };
+    bool hit = tree.intersect(ray1, context, mat_index);
+    std::cout << "hits triangle 1 (expected: 1): " << hit
+              << "  mat_index=" << mat_index
+              << "  t=" << context.t << "\n";
+ 
+    // ray from above hitting triangle 0 (left)
+    Ray3df ray2{ {-2.0f, 0.0f, 5.0f}, {0.0f, 0.0f, -1.0f} };
+    context = {}; mat_index = -1;
+    hit = tree.intersect(ray2, context, mat_index);
+    std::cout << "hits triangle 0 (expected: 1): " << hit
+              << "  mat_index=" << mat_index
+              << "  t=" << context.t << "\n";
+ 
+    // ray from above hitting triangle 2 (right)
+    Ray3df ray3{ {2.0f, 0.0f, 5.0f}, {0.0f, 0.0f, -1.0f} };
+    context = {}; mat_index = -1;
+    hit = tree.intersect(ray3, context, mat_index);
+    std::cout << "hits triangle 2 (expected: 1): " << hit
+              << "  mat_index=" << mat_index
+              << "  t=" << context.t << "\n";
+ 
+    // ray missing all triangles
+    Ray3df ray4{ {10.0f, 10.0f, 5.0f}, {0.0f, 0.0f, -1.0f} };
+    context = {}; mat_index = -1;
+    hit = tree.intersect(ray4, context, mat_index);
+    std::cout << "hits nothing    (expected: 0): " << hit << "\n";
 
     return 0;
 }
