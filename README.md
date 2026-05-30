@@ -1,9 +1,12 @@
 # Bericht
 
+## 30/05/26
+- Tests für AABB und k-d-Baum hinzugefügt
+
 ## 29/05/26
 - AABB implementiert
-- KD Baum implementiert
-- Raytracer mit KD Baum Nutzung implementiert
+- k-d-Baum implementiert
+- Raytracer mit k-d-Baum Nutzung implementiert
 
 ## 27/05/26
 - Tests hinzugefügt
