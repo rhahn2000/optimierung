@@ -66,12 +66,6 @@ std::unique_ptr<KDNode> KDTree::build_recursive(std::vector<int> &indices,
         if (tri_max >= split) right_indices.push_back(idx);
     }
 
-    if (left_indices.empty() || right_indices.empty()) {
-        node->is_leaf = true;
-        node->triangle_indices = indices;
-        return node;
-    }
-
     AABB left_box  = current_box;
     AABB right_box = current_box;
     left_box.max_pt[axis]  = split;

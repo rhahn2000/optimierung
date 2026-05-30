@@ -1,6 +1,8 @@
 add_executable(core_test
     Camera_test.cc
     Raytracer_test.cc
+    AABB_test.cc
+    KDTree_test.cc
     Camera.cc
     Raytracer.cc
     AABB.cc
