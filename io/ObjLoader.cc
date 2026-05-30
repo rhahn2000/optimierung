@@ -131,7 +131,8 @@ void ObjLoader::load(std::string path, Scene& scene) {
             }
         }
     }
-
+    
+    scene.build_kd_tree();
     std::cout << "ObjLoader: Loaded " << path << std::endl;
 }
 

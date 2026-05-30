@@ -5,10 +5,9 @@
 #include "../geometry/geometry.h"
 #include "Material.h"
 #include "Light.h"
+#include "../core/KDTree.h"
 #include <vector>
 #include <array>
-
-// #include "../core/KDTree.h"
 
 /**
  * @class Scene
@@ -56,10 +55,18 @@ class Scene {
          */
         bool intersect_mt(Ray3df& ray, Intersection_Context<float, 3>& context, int& mat_index);
         /**
+         * @brief intersection calculation using kd tree
+         * @param ray the ray to check
+         * @param context 
+         * @param mat_index the index of material
+         * @return boolean; true if ray hits triangle
+         */
+        bool intersect_kdtree(Ray3df& ray, Intersection_Context<float, 3>& context, int& mat_index);
+        /**
          * @brief builds the kd tree after objloader finished
          * @return void
          */
-        // void build_kd_tree();
+        void build_kd_tree();
         /**
          * @brief Getter of lights
          * @return all lights of the scene
@@ -79,9 +86,9 @@ class Scene {
             Vector3df a, b, c;
         };
         std::vector<TriangleMT> triangles_mt;
-        // std::vector<Vector3df> vertices_a;
-        // std::vector<Vector3df> vertices_b;
-        // std::vector<Vector3df> vertices_c;
-        // KDTree kd_tree;
+        std::vector<Vector3df> vertices_a;
+        std::vector<Vector3df> vertices_b;
+        std::vector<Vector3df> vertices_c;
+        KDTree kd_tree;
 };
 #endif

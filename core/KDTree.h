@@ -41,11 +41,6 @@ class KDTree {
          * @brief Constructor of KDTree
          */
         KDTree();
-        /**
-         * Destroys the KDTree.
-         * @brief Deconstructor of KDTree
-         */
-        ~KDTree();
 
         /**
          * @brief starts building a tree after all objects are in scene

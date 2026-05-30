@@ -8,8 +8,6 @@ KDTree::KDTree()
 {
 }
 
-KDTree::~KDTree() = default;
-
 void KDTree::build(const std::vector<Triangle3df> &triangles,
                    const std::vector<Vector3df> &vertices_a,
                    const std::vector<Vector3df> &vertices_b,
@@ -20,7 +18,6 @@ void KDTree::build(const std::vector<Triangle3df> &triangles,
     v_b = &vertices_b;
     v_c = &vertices_c;
 
-    // build the root AABB over all triangles
     AABB root_box;
     for (size_t i = 0; i < triangles.size(); ++i) {
         AABB tri_box = AABB::from_triangle(vertices_a[i], vertices_b[i], vertices_c[i]);
@@ -28,7 +25,6 @@ void KDTree::build(const std::vector<Triangle3df> &triangles,
         root_box.grow(tri_box.max_pt);
     }
 
-    // all triangle indices go into the root
     std::vector<int> indices(triangles.size());
     for (size_t i = 0; i < triangles.size(); ++i)
         indices[i] = static_cast<int>(i);
@@ -43,14 +39,12 @@ std::unique_ptr<KDNode> KDTree::build_recursive(std::vector<int> &indices,
     auto node = std::make_unique<KDNode>();
     node->box = current_box;
 
-    // --- leaf condition ---
     if (depth >= MAX_DEPTH || static_cast<int>(indices.size()) <= MIN_TRIANGLES) {
         node->is_leaf = true;
         node->triangle_indices = indices;
         return node;
     }
 
-    // --- find longest axis ---
     float len_x = current_box.max_pt[0] - current_box.min_pt[0];
     float len_y = current_box.max_pt[1] - current_box.min_pt[1];
     float len_z = current_box.max_pt[2] - current_box.min_pt[2];
@@ -59,29 +53,25 @@ std::unique_ptr<KDNode> KDTree::build_recursive(std::vector<int> &indices,
     if (len_y > len_x && len_y > len_z) axis = 1;
     else if (len_z > len_x && len_z > len_y) axis = 2;
 
-    // --- split at center of box along that axis ---
     float split = 0.5f * (current_box.min_pt[axis] + current_box.max_pt[axis]);
     node->split_axis     = axis;
     node->split_position = split;
 
-    // --- distribute triangles by centroid ---
+    // distribute by AABB overlap – triangles spanning the split go to both sides
     std::vector<int> left_indices, right_indices;
     for (int idx : indices) {
-        float centroid = ((*v_a)[idx][axis] + (*v_b)[idx][axis] + (*v_c)[idx][axis]) / 3.0f;
-        if (centroid <= split)
-            left_indices.push_back(idx);
-        else
-            right_indices.push_back(idx);
+        float tri_min = std::min({(*v_a)[idx][axis], (*v_b)[idx][axis], (*v_c)[idx][axis]});
+        float tri_max = std::max({(*v_a)[idx][axis], (*v_b)[idx][axis], (*v_c)[idx][axis]});
+        if (tri_min <= split) left_indices.push_back(idx);
+        if (tri_max >= split) right_indices.push_back(idx);
     }
 
-    // --- avoid infinite recursion if split does not separate triangles ---
     if (left_indices.empty() || right_indices.empty()) {
         node->is_leaf = true;
         node->triangle_indices = indices;
         return node;
     }
 
-    // --- build child AABBs and recurse ---
     AABB left_box  = current_box;
     AABB right_box = current_box;
     left_box.max_pt[axis]  = split;
@@ -111,16 +101,17 @@ bool KDTree::intersect_recursive(const KDNode *node, Ray3df &ray,
 {
     if (!node) return false;
 
-    // --- leaf: test all triangles ---
+    // --- leaf: test all triangles, keep closest ---
     if (node->is_leaf) {
         bool hit = false;
         float closest_t = std::numeric_limits<float>::infinity();
 
         for (int idx : node->triangle_indices) {
             Intersection_Context<float, 3> tmp{};
-            if ((*scene_triangles)[idx].intersects(ray, tmp) && tmp.t < closest_t) {
+            if ((*scene_triangles)[idx].intersects(ray, tmp) && tmp.t > 1e-4f && tmp.t < closest_t) {
                 closest_t = tmp.t;
                 context   = tmp;
+                context.normal.normalize();
                 mat_index = idx;
                 hit       = true;
             }
@@ -128,15 +119,35 @@ bool KDTree::intersect_recursive(const KDNode *node, Ray3df &ray,
         return hit;
     }
 
-    // --- inner node: recurse into children whose boxes the ray hits ---
+    // --- inner node: recurse into both children, keep closest result ---
     bool hit = false;
-    float t_min_child, t_max_child;
+    float closest_t = std::numeric_limits<float>::infinity();
+    Intersection_Context<float, 3> tmp_ctx{};
+    int tmp_idx = -1;
 
-    if (node->left && node->left->box.intersect(ray, t_min_child, t_max_child))
-        hit |= intersect_recursive(node->left.get(), ray, t_min_child, t_max_child, context, mat_index);
+    float t_min_l, t_max_l;
+    if (node->left && node->left->box.intersect(ray, t_min_l, t_max_l)) {
+        if (intersect_recursive(node->left.get(), ray, t_min_l, t_max_l, tmp_ctx, tmp_idx)) {
+            if (tmp_ctx.t < closest_t) {
+                closest_t = tmp_ctx.t;
+                context   = tmp_ctx;
+                mat_index = tmp_idx;
+                hit       = true;
+            }
+        }
+    }
 
-    if (node->right && node->right->box.intersect(ray, t_min_child, t_max_child))
-        hit |= intersect_recursive(node->right.get(), ray, t_min_child, t_max_child, context, mat_index);
+    float t_min_r, t_max_r;
+    if (node->right && node->right->box.intersect(ray, t_min_r, t_max_r)) {
+        if (intersect_recursive(node->right.get(), ray, t_min_r, t_max_r, tmp_ctx, tmp_idx)) {
+            if (tmp_ctx.t < closest_t) {
+                closest_t = tmp_ctx.t;
+                context   = tmp_ctx;
+                mat_index = tmp_idx;
+                hit       = true;
+            }
+        }
+    }
 
     return hit;
 }

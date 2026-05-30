@@ -26,7 +26,7 @@ class Raytracer {
          * @param scene the scene containing lights, triangles and materials
          * @return void
          */
-        void render(Camera cam, Scene scene);
+        void render(Camera cam, Scene& scene);
         /**
          * @brief Calculate the color for one ray
          * @param ray the ray to calculate the color for

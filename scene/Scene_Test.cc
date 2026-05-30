@@ -126,6 +126,7 @@ namespace
         Triangle3df tri = make_triangle_z0();
         Material mat = make_red_material();
         scene.addTriangle(tri, mat);
+        scene.build_kd_tree();
 
         const Material &result = scene.getMaterial(0);
         EXPECT_NEAR(1.0f, result.color[0], kEps);
@@ -139,6 +140,7 @@ namespace
         Triangle3df tri = make_triangle_z0();
         Material mat({0.5f, 0.5f, 0.5f}, 0.3f, 0.8f, 1.5f, 0.2f);
         scene.addTriangle(tri, mat);
+        scene.build_kd_tree();
 
         const Material &result = scene.getMaterial(0);
         EXPECT_NEAR(0.3f, result.reflectivity, kEps);
@@ -166,6 +168,7 @@ namespace
         Triangle3df tri = make_triangle_z0();
         Material mat = make_red_material();
         scene.addTriangle(tri, mat);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_hitting_center();
         Intersection_Context<float, 3> ctx;
@@ -179,6 +182,7 @@ namespace
         Triangle3df tri = make_triangle_z0();
         Material mat = make_red_material();
         scene.addTriangle(tri, mat);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_missing();
         Intersection_Context<float, 3> ctx;
@@ -192,6 +196,7 @@ namespace
         Triangle3df tri = make_triangle_z0();
         Material mat = make_red_material();
         scene.addTriangle(tri, mat);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_hitting_center();
         Intersection_Context<float, 3> ctx;
@@ -206,6 +211,7 @@ namespace
         Triangle3df tri = make_triangle_z0();
         Material mat = make_red_material();
         scene.addTriangle(tri, mat);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_hitting_center();
         Intersection_Context<float, 3> ctx;
@@ -223,6 +229,7 @@ namespace
         Material mat_back = make_blue_material();
         scene.addTriangle(front, mat_front);
         scene.addTriangle(back, mat_back);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_hitting_center();
         Intersection_Context<float, 3> ctx;
@@ -251,6 +258,7 @@ namespace
         Material mat = make_red_material();
         Vector3df a{-1.0f, -1.0f, 0.0f}, b{1.0f, -1.0f, 0.0f}, c{0.0f, 1.0f, 0.0f};
         scene.addTriangle(tri, mat, a, b, c);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_hitting_center();
         Intersection_Context<float, 3> ctx;
@@ -265,6 +273,7 @@ namespace
         Material mat = make_red_material();
         Vector3df a{-1.0f, -1.0f, 0.0f}, b{1.0f, -1.0f, 0.0f}, c{0.0f, 1.0f, 0.0f};
         scene.addTriangle(tri, mat, a, b, c);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_missing();
         Intersection_Context<float, 3> ctx;
@@ -279,6 +288,7 @@ namespace
         Material mat = make_red_material();
         Vector3df a{-1.0f, -1.0f, 0.0f}, b{1.0f, -1.0f, 0.0f}, c{0.0f, 1.0f, 0.0f};
         scene.addTriangle(tri, mat, a, b, c);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_hitting_center();
         Intersection_Context<float, 3> ctx;
@@ -298,6 +308,7 @@ namespace
         Vector3df ab{-1.0f, -1.0f, -2.0f}, bb{1.0f, -1.0f, -2.0f}, cb{0.0f, 1.0f, -2.0f};
         scene.addTriangle(front, mat_front, af, bf, cf);
         scene.addTriangle(back, mat_back, ab, bb, cb);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_hitting_center();
         Intersection_Context<float, 3> ctx;
@@ -313,6 +324,7 @@ namespace
         Material mat = make_red_material();
         Vector3df a{-1.0f, -1.0f, 0.0f}, b{1.0f, -1.0f, 0.0f}, c{0.0f, 1.0f, 0.0f};
         scene.addTriangle(tri, mat, a, b, c);
+        scene.build_kd_tree();
 
         Ray3df ray = make_ray_hitting_center();
         Intersection_Context<float, 3> ctx1, ctx2;
@@ -335,6 +347,7 @@ namespace
         Material mat = make_red_material();
         Vector3df a{-1.0f, -1.0f, 0.0f}, b{1.0f, -1.0f, 0.0f}, c{0.0f, 1.0f, 0.0f};
         scene.addTriangle(tri, mat, a, b, c);
+        scene.build_kd_tree();
 
         Ray3df ray{{0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, 1.0f}};
         Intersection_Context<float, 3> ctx;

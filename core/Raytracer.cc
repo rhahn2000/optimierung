@@ -8,7 +8,7 @@ Raytracer::Raytracer(int width, int height, int max_depth)
 {
 }
 
-void Raytracer::render(Camera cam, Scene scene) {
+void Raytracer::render(Camera cam, Scene& scene) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float u = static_cast<float>(x) / (width  - 1);
@@ -40,7 +40,7 @@ static std::vector<Light> find_visible_lights(
         int shadow_mat = -1;
 
         // Light is visible if no object is hit, or hit is beyond the light
-        if (!scene.intersect_mt(shadow_ray, shadow_ctx, shadow_mat)
+        if (!scene.intersect_kdtree(shadow_ray, shadow_ctx, shadow_mat)
             || shadow_ctx.t > dist_to_light)
         {
             visible.push_back(light);
@@ -110,7 +110,7 @@ Vector3df Raytracer::trace(Ray3df& ray, Scene& scene, int depth) {
     Intersection_Context<float, 3> ctx;
     int mat_idx = -1;
 
-    if (!scene.intersect_mt(ray, ctx, mat_idx)) {
+    if (!scene.intersect_kdtree(ray, ctx, mat_idx)) {
         return BACKGROUND;
     }
 

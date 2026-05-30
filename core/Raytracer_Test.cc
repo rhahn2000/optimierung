@@ -78,7 +78,8 @@ namespace
     {
         int w = 10, h = 10;
         Raytracer rt(w, h, 1);
-        rt.render(make_default_camera(), make_empty_scene());
+        Scene s1 = make_empty_scene();
+        rt.render(make_default_camera(), s1);
         EXPECT_EQ(rt.getFramebuffer().size(), static_cast<size_t>(w * h));
     }
 
@@ -87,7 +88,8 @@ namespace
     {
         int w = 16, h = 9;
         Raytracer rt(w, h, 1);
-        rt.render(make_default_camera(), make_empty_scene());
+        Scene s2 = make_empty_scene();
+        rt.render(make_default_camera(), s2);
         EXPECT_EQ(rt.getFramebuffer().size(), static_cast<size_t>(w * h));
     }
 
@@ -125,6 +127,7 @@ namespace
     {
         Raytracer rt(10, 10, 3);
         Scene scene = make_scene_with_triangle();
+        scene.build_kd_tree();
 
         Ray3df ray_hit{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Ray3df ray_miss{{0.0f, 0.0f, 0.0f}, {10.0f, 10.0f, -1.0f}};
@@ -143,6 +146,7 @@ namespace
     {
         Raytracer rt(10, 10, 3);
         Scene scene = make_scene_with_triangle();
+        scene.build_kd_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Vector3df color = rt.trace(ray, scene, 0);
         EXPECT_GE(color[0], 0.0f);
@@ -159,6 +163,7 @@ namespace
     {
         Raytracer rt(10, 10, 5);
         Scene scene = make_scene_with_triangle();
+        scene.build_kd_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         EXPECT_NO_THROW(rt.trace(ray, scene, 0));
     }
@@ -168,6 +173,7 @@ namespace
     {
         Raytracer rt(10, 10, 5);
         Scene scene = make_scene_with_triangle();
+        scene.build_kd_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Vector3df color = rt.trace(ray, scene, 0);
 
@@ -192,6 +198,7 @@ namespace
         Triangle3df tri_matte(a, b, c);
         Material mat_matte({1.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 1.0f, 0.0f);
         scene_matte.addTriangle(tri_matte, mat_matte, a, b, c);
+        scene_matte.build_kd_tree();
         Light light({0.0f, 5.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
         scene_matte.addLight(light);
 
@@ -199,6 +206,7 @@ namespace
         Triangle3df tri_refl(a, b, c);
         Material mat_refl({1.0f, 0.0f, 0.0f}, 0.8f, 0.0f, 1.0f, 0.0f);
         scene_refl.addTriangle(tri_refl, mat_refl, a, b, c);
+        scene_refl.build_kd_tree();
         scene_refl.addLight(light);
 
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
@@ -222,6 +230,7 @@ namespace
         Triangle3df tri(a, b, c);
         Material mat({1.0f, 0.0f, 0.0f}, 0.8f, 0.0f, 1.0f, 0.0f);
         scene.addTriangle(tri, mat, a, b, c);
+        scene.build_kd_tree();
         scene.addLight(Light({0.0f, 5.0f, 0.0f}, {1.0f, 1.0f, 1.0f}));
 
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
@@ -249,12 +258,14 @@ namespace
         Triangle3df tri_opaque(a, b, c);
         Material mat_opaque({1.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 1.0f, 0.0f);
         scene_opaque.addTriangle(tri_opaque, mat_opaque, a, b, c);
+        scene_opaque.build_kd_tree();
         scene_opaque.addLight(light);
 
         Scene scene_transp;
         Triangle3df tri_transp(a, b, c);
         Material mat_transp({1.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 1.5f, 0.8f);
         scene_transp.addTriangle(tri_transp, mat_transp, a, b, c);
+        scene_transp.build_kd_tree();
         scene_transp.addLight(light);
 
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
@@ -278,6 +289,7 @@ namespace
         Triangle3df tri(a, b, c);
         Material mat({1.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 1.5f, 0.8f);
         scene.addTriangle(tri, mat, a, b, c);
+        scene.build_kd_tree();
         scene.addLight(Light({0.0f, 5.0f, 0.0f}, {1.0f, 1.0f, 1.0f}));
 
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
@@ -306,6 +318,7 @@ namespace
         Scene scene_lit;
         Triangle3df tri_back_lit(a2, b2, c2);
         scene_lit.addTriangle(tri_back_lit, mat_back, a2, b2, c2);
+        scene_lit.build_kd_tree();
         scene_lit.addLight(light);
 
         Scene scene_shadowed;
@@ -317,6 +330,7 @@ namespace
         Triangle3df tri_back_shadowed(a2, b2, c2);
         scene_shadowed.addTriangle(tri_front, mat_front, a1, b1, c1);
         scene_shadowed.addTriangle(tri_back_shadowed, mat_back, a2, b2, c2);
+        scene_shadowed.build_kd_tree();
         scene_shadowed.addLight(light);
 
         Ray3df ray{{0.0f, -0.5f, 0.0f}, {0.0f, 0.0f, -1.0f}};

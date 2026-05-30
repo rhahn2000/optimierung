@@ -5,6 +5,8 @@ add_executable(scene_test
     Light.cc
     ${CMAKE_SOURCE_DIR}/math/math.cc
     ${CMAKE_SOURCE_DIR}/geometry/geometry.cc
+    ${CMAKE_SOURCE_DIR}/core/KDTree.cc
+    ${CMAKE_SOURCE_DIR}/core/AABB.cc
 )
 
 target_include_directories(scene_test PRIVATE ${CMAKE_SOURCE_DIR})

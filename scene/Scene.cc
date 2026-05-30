@@ -9,15 +9,20 @@ void Scene::addTriangle(Triangle3df& triangle, Material& material) {
         Vector3df{0.0f, 0.0f, 0.0f},
         Vector3df{0.0f, 0.0f, 0.0f}
     });
+    vertices_a.push_back(Vector3df{0.0f, 0.0f, 0.0f});
+    vertices_b.push_back(Vector3df{0.0f, 0.0f, 0.0f});
+    vertices_c.push_back(Vector3df{0.0f, 0.0f, 0.0f});
 }
 
 void Scene::addTriangle(Triangle3df& triangle, Material& material, const Vector3df& a, const Vector3df& b, const Vector3df& c) {
     triangles.push_back(triangle);
     materials.push_back(material);
     triangles_mt.push_back(TriangleMT{a, b, c});
+    vertices_a.push_back(a);
+    vertices_b.push_back(b);
+    vertices_c.push_back(c);
 }
  
-
 void Scene::addLight(Light& light) {
     lights.push_back(light);
 }
@@ -101,6 +106,14 @@ bool Scene::intersect_mt(Ray3df& ray, Intersection_Context<float, 3>& context, i
         }
     }
     return hit;
+}
+
+bool Scene::intersect_kdtree(Ray3df& ray, Intersection_Context<float, 3>& context, int& mat_index) {
+    return kd_tree.intersect(ray, context, mat_index);
+}
+
+void Scene::build_kd_tree() {
+    kd_tree.build(triangles, vertices_a, vertices_b, vertices_c);
 }
 
 const std::vector<Light>& Scene::getLights() const {
