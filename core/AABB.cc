@@ -38,8 +38,15 @@ bool AABB::intersect(const Ray3df& ray, float& t_min, float& t_max) const {
     t_max =  std::numeric_limits<float>::infinity();
 
     for (size_t i = 0; i < 3; ++i) {
-        const float inv_dir = 1.0f / ray.direction[i];
+        if (std::abs(ray.direction[i]) < 1e-8f) {
+            // check if ray is parallel to axis 
+            if (ray.origin[i] < min_pt[i] || ray.origin[i] > max_pt[i]) {
+                return false;
+            }
+            continue;
+        }
 
+        const float inv_dir = 1.0f / ray.direction[i];
         float t_near = (min_pt[i] - ray.origin[i]) * inv_dir;
         float t_far  = (max_pt[i] - ray.origin[i]) * inv_dir;
 

@@ -66,16 +66,13 @@ class KDTree {
         std::unique_ptr<KDNode> root;
 
         const std::vector<Triangle3df> *scene_triangles;
-        const std::vector<Vector3df> *v_a;
-        const std::vector<Vector3df> *v_b;
-        const std::vector<Vector3df> *v_c;
+        const std::vector<Vector3df>   *v_a;
+        const std::vector<Vector3df>   *v_b;
+        const std::vector<Vector3df>   *v_c;
 
         const int MAX_DEPTH = 20;
         const int MIN_TRIANGLES = 4;
 
-        /**
-         * Rekursiver Bauprozess
-         */
         /**
          * @brief helper method for recursive tree building
          * @param indices list of indices of triangles in section

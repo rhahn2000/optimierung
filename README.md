@@ -1,5 +1,9 @@
 # Bericht
 
+## 29/06/26
+- Feedback implementiert
+- Bug (fehlende Reflexion und Transmission) beim Rendern mit KD-Baum gefixt
+
 ## 30/05/26
 - Tests für AABB und k-d-Baum hinzugefügt
 

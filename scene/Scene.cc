@@ -38,6 +38,10 @@ bool Scene::intersect(Ray3df& ray, Intersection_Context<float, 3>& context, int&
                 t_min = tmp_context.t;
                 context = tmp_context;
                 context.normal.normalize();
+                // flip normal to point against ray direction
+                if (context.normal * ray.direction > 0.0f) {
+                    context.normal *= -1.0f;
+                }
                 mat_index = static_cast<int>(i);
                 hit = true;
             }

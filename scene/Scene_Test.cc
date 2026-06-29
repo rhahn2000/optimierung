@@ -238,6 +238,25 @@ namespace
         EXPECT_NEAR(1.0f, ctx.t, kEps);
     }
 
+    // tests whether the normal is flipped when ray hits triangle from behind
+    TEST_F(SceneTest, IntersectBackfaceNormalPointsTowardRay)
+    {
+        Triangle3df tri = make_triangle_z0();
+        Material mat = make_red_material();
+        scene.addTriangle(tri, mat);
+        scene.build_kd_tree();
+
+        // ray comes from behind (negative z) pointing in +z direction
+        Ray3df ray{{0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, 1.0f}};
+        Intersection_Context<float, 3> ctx;
+        int mat_index = -1;
+        ASSERT_TRUE(scene.intersect(ray, ctx, mat_index));
+
+        // normal must point against the ray direction after flip
+        float dot = ctx.normal * ray.direction;
+        EXPECT_LT(dot, 0.0f);
+    }
+
     // ================================================================
     // 4. intersect (moeller trumbore)
     // ================================================================
