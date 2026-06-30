@@ -37,14 +37,12 @@ namespace
     }
 
     /**
-     * Creates an scene with a triangle for testing.
-     * @brief Creation of test scene
-     * @return scene with triangle
+     * Fills the given scene with a single triangle and a light for testing.
+     * @brief Fills test scene
+     * @param scene the scene to fill with a triangle and a light
      */
-    Scene make_scene_with_triangle()
+    void make_scene_with_triangle(Scene& scene)
     {
-        // create scene
-        Scene scene;
         // create triangle
         Vector3df a{-1.0f, -1.0f, -3.0f};
         Vector3df b{1.0f, -1.0f, -3.0f};
@@ -58,7 +56,6 @@ namespace
         Vector3df light_int{1.0f, 1.0f, 1.0f};
         Light light(light_pos, light_int);
         scene.addLight(light);
-        return scene;
     }
 
     // ================================================================
@@ -126,7 +123,8 @@ namespace
     TEST(RaytracerTest, TraceHitDiffersFromMiss)
     {
         Raytracer rt(10, 10, 3);
-        Scene scene = make_scene_with_triangle();
+        Scene scene;
+        make_scene_with_triangle(scene);
         scene.build_kd_tree();
 
         Ray3df ray_hit{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
@@ -145,7 +143,8 @@ namespace
     TEST(RaytracerTest, TraceHitNonNegativeColor)
     {
         Raytracer rt(10, 10, 3);
-        Scene scene = make_scene_with_triangle();
+        Scene scene;
+        make_scene_with_triangle(scene);
         scene.build_kd_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Vector3df color = rt.trace(ray, scene, 0);
@@ -162,7 +161,8 @@ namespace
     TEST(RaytracerTest, TraceDepthZeroDoesNotThrow)
     {
         Raytracer rt(10, 10, 5);
-        Scene scene = make_scene_with_triangle();
+        Scene scene;
+        make_scene_with_triangle(scene);
         scene.build_kd_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         EXPECT_NO_THROW(rt.trace(ray, scene, 0));
@@ -172,7 +172,8 @@ namespace
     TEST(RaytracerTest, TraceDepthZeroReturnsBackground)
     {
         Raytracer rt(10, 10, 5);
-        Scene scene = make_scene_with_triangle();
+        Scene scene;
+        make_scene_with_triangle(scene);
         scene.build_kd_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Vector3df color = rt.trace(ray, scene, 0);

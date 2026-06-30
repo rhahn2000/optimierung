@@ -132,8 +132,8 @@ namespace
     // 1. constructor tests
     // ================================================================
 
-    // tests whether the default constructor does not throw
-    TEST(KDTreeTest, DefaultConstructorDoesNotThrow)
+    // tests whether the constructor does not throw
+    TEST(KDTreeTest, ConstructorDoesNotThrow)
     {
         std::vector<Triangle3df> triangles;
         std::vector<Vector3df>   va, vb, vc;
@@ -376,6 +376,140 @@ namespace
         ASSERT_TRUE(tree.intersect(ray, ctx, mat_index));
         float dot = ctx.normal * ray.direction;
         EXPECT_LT(dot, 0.0f);
+    }
+
+    // ================================================================
+    // 10. intersect_packet – basic correctness
+    // ================================================================
+
+    // tests whether a packet of 8 identical rays aimed at the triangle reports a hit on every lane
+    TEST_F(KDTreeSingleTriangleTest, IntersectPacketAllLanesHit)
+    {
+        KDTree tree = make_tree();
+
+        Ray3df rays[8];
+        for (int i = 0; i < 8; ++i)
+            rays[i] = Ray3df{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
+
+        RayPacket packet;
+        packet.set_rays(rays);
+
+        Intersection_Context<float, 3> contexts[8];
+        int mat_indices[8];
+        int hit_mask = tree.intersect_packet(packet, 0xFF, contexts, mat_indices);
+
+        EXPECT_EQ(0xFF, hit_mask);
+    }
+
+    // tests whether a packet of 8 identical rays missing the triangle reports no hit on any lane
+    TEST_F(KDTreeSingleTriangleTest, IntersectPacketNoLaneHits)
+    {
+        KDTree tree = make_tree();
+
+        Ray3df rays[8];
+        for (int i = 0; i < 8; ++i)
+            rays[i] = Ray3df{{10.0f, 10.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
+
+        RayPacket packet;
+        packet.set_rays(rays);
+
+        Intersection_Context<float, 3> contexts[8];
+        int mat_indices[8];
+        int hit_mask = tree.intersect_packet(packet, 0xFF, contexts, mat_indices);
+
+        EXPECT_EQ(0x00, hit_mask);
+    }
+
+    // tests whether only the lanes whose ray hits the triangle are marked in the bitmask
+    TEST_F(KDTreeSingleTriangleTest, IntersectPacketMixedLanesHitMaskCorrect)
+    {
+        KDTree tree = make_tree();
+
+        Ray3df rays[8];
+        for (int i = 0; i < 4; ++i)
+            rays[i] = Ray3df{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
+        for (int i = 4; i < 8; ++i)
+            rays[i] = Ray3df{{10.0f, 10.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
+
+        RayPacket packet;
+        packet.set_rays(rays);
+
+        Intersection_Context<float, 3> contexts[8];
+        int mat_indices[8];
+        int hit_mask = tree.intersect_packet(packet, 0xFF, contexts, mat_indices);
+
+        EXPECT_EQ(0x0F, hit_mask);
+    }
+
+    // tests whether lanes excluded via active_mask are never reported as hit, even if their ray would hit
+    TEST_F(KDTreeSingleTriangleTest, IntersectPacketRespectsActiveMask)
+    {
+        KDTree tree = make_tree();
+
+        Ray3df rays[8];
+        for (int i = 0; i < 8; ++i)
+            rays[i] = Ray3df{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
+
+        RayPacket packet;
+        packet.set_rays(rays);
+
+        Intersection_Context<float, 3> contexts[8];
+        int mat_indices[8];
+        // only lanes 0-3 are active, even though all 8 rays would hit
+        int hit_mask = tree.intersect_packet(packet, 0x0F, contexts, mat_indices);
+
+        EXPECT_EQ(0x0F, hit_mask);
+    }
+
+    // ================================================================
+    // 11. intersect_packet – nearest hit across subtrees (closest_t regression)
+    // ================================================================
+
+    // tests whether the nearest of several triangles spanning both subtrees is reported via the packet path
+    TEST_F(KDTreeMultipleTrianglesTest, IntersectPacketReturnsNearestAcrossSubtrees)
+    {
+        KDTree tree = make_tree();
+
+        Ray3df rays[8];
+        for (int i = 0; i < 8; ++i)
+            rays[i] = Ray3df{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
+
+        RayPacket packet;
+        packet.set_rays(rays);
+
+        Intersection_Context<float, 3> contexts[8];
+        int mat_indices[8];
+        int hit_mask = tree.intersect_packet(packet, 0xFF, contexts, mat_indices);
+
+        ASSERT_EQ(0xFF, hit_mask);
+        for (int i = 0; i < 8; ++i)
+        {
+            EXPECT_EQ(0, mat_indices[i]);
+        }
+    }
+
+    // tests whether the reported intersection distance matches the nearest triangle, not a farther one found later in traversal
+    TEST_F(KDTreeMultipleTrianglesTest, IntersectPacketReturnsNearestDistance)
+    {
+        KDTree tree = make_tree();
+
+        Ray3df rays[8];
+        for (int i = 0; i < 8; ++i)
+            rays[i] = Ray3df{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
+
+        RayPacket packet;
+        packet.set_rays(rays);
+
+        Intersection_Context<float, 3> contexts[8];
+        int mat_indices[8];
+        tree.intersect_packet(packet, 0xFF, contexts, mat_indices);
+
+        // nearest triangle sits at z = -2, so t must be 2.0, not a larger value
+        // from a farther triangle that happened to be visited later
+        for (int i = 0; i < 8; ++i)
+        {
+            EXPECT_NEAR(2.0f, contexts[i].t, kEps);
+        }
     }
 
 } // namespace

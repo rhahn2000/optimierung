@@ -109,7 +109,7 @@ namespace
     // tests whether all 8 rays report a hit when all aim at the box
     TEST_F(RayPacketAABB, AllRaysHitBox)
     {
-        AABB box({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
+        AABB box({-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
 
         Ray3df rays[8];
         for (int i = 0; i < 8; ++i)
@@ -128,7 +128,7 @@ namespace
     // tests whether the bitmask is zero when no ray hits the box
     TEST_F(RayPacketAABB, NoRayHitsBox)
     {
-        AABB box({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
+        AABB box({-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
 
         Ray3df rays[8];
         for (int i = 0; i < 8; ++i)
@@ -147,7 +147,7 @@ namespace
     // tests whether the bitmask correctly marks only the rays that hit the box
     TEST_F(RayPacketAABB, SomeRaysHitBox)
     {
-        AABB box({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
+        AABB box({-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
 
         Ray3df rays[8];
         for (int i = 0; i < 8; ++i)
@@ -173,7 +173,7 @@ namespace
     // tests whether t_min and t_max hold plausible entry and exit distances
     TEST_F(RayPacketAABB, TMinAndTMaxPlausible)
     {
-        AABB box({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
+        AABB box({-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
 
         Ray3df rays[8];
         for (int i = 0; i < 8; ++i)
@@ -200,7 +200,7 @@ namespace
     // tests whether a ray originating inside the box still reports a hit
     TEST_F(RayPacketAABB, RayOriginInsideBox)
     {
-        AABB box({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
+        AABB box({-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
 
         Ray3df rays[8];
         for (int i = 0; i < 8; ++i)
