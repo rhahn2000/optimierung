@@ -10,6 +10,7 @@ add_executable(io_test
     ${CMAKE_SOURCE_DIR}/scene/Light.cc
     ${CMAKE_SOURCE_DIR}/core/KDTree.cc
     ${CMAKE_SOURCE_DIR}/core/AABB.cc
+    ${CMAKE_SOURCE_DIR}/core/RayPacket.cc
 )
 
 target_include_directories(io_test PRIVATE ${CMAKE_SOURCE_DIR})

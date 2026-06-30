@@ -7,6 +7,7 @@ add_executable(scene_test
     ${CMAKE_SOURCE_DIR}/geometry/geometry.cc
     ${CMAKE_SOURCE_DIR}/core/KDTree.cc
     ${CMAKE_SOURCE_DIR}/core/AABB.cc
+    ${CMAKE_SOURCE_DIR}/core/RayPacket.cc
 )
 
 target_include_directories(scene_test PRIVATE ${CMAKE_SOURCE_DIR})

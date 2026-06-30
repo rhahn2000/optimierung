@@ -6,6 +6,7 @@
 #include "Material.h"
 #include "Light.h"
 #include "../core/KDTree.h"
+#include "../core/RayPacket.h"
 #include <vector>
 #include <array>
 
@@ -63,6 +64,16 @@ class Scene {
          */
         bool intersect_kdtree(Ray3df& ray, Intersection_Context<float, 3>& context, int& mat_index);
         /**
+         * @brief intersection calculation using kd tree packet tracing (AVX)
+         * @param packet the ray packet to check
+         * @param active_mask bitmask of active rays
+         * @param contexts [out] per-ray intersection contexts
+         * @param mat_indices [out] per-ray material indices
+         * @return bitmask — bit i set iff ray i hit something
+         */
+        int intersect_packet(const RayPacket& packet, int active_mask,
+                             Intersection_Context<float, 3> contexts[8], int mat_indices[8]);
+        /**
          * @brief builds the kd tree after objloader finished
          * @return void
          */
@@ -89,6 +100,6 @@ class Scene {
         std::vector<Vector3df> vertices_a;
         std::vector<Vector3df> vertices_b;
         std::vector<Vector3df> vertices_c;
-        KDTree kd_tree;
+        KDTree kd_tree{triangles, vertices_a, vertices_b, vertices_c};
 };
 #endif

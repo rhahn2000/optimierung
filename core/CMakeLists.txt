@@ -3,10 +3,12 @@ add_executable(core_test
     Raytracer_test.cc
     AABB_test.cc
     KDTree_test.cc
+    RayPacket_test.cc
     Camera.cc
     Raytracer.cc
     AABB.cc
     KDTree.cc
+    RayPacket.cc
     ${CMAKE_SOURCE_DIR}/math/math.cc
     ${CMAKE_SOURCE_DIR}/geometry/geometry.cc
     ${CMAKE_SOURCE_DIR}/scene/Scene.cc

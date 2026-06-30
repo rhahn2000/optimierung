@@ -28,6 +28,13 @@ class Raytracer {
          */
         void render(Camera cam, Scene& scene);
         /**
+         * @brief Scalar render loop for timing comparison
+         * @param cam the camera with the rays
+         * @param scene the scene containing lights, triangles and materials
+         * @return void
+         */
+        void render_scalar(Camera cam, Scene& scene);
+        /**
          * @brief Calculate the color for one ray
          * @param ray the ray to calculate the color for
          * @param scene
@@ -35,6 +42,17 @@ class Raytracer {
          * @return vector containing the color information 
          */
         Vector3df trace(Ray3df& ray, Scene& scene, int depth);
+        /**
+         * @brief Shades a ray given an already computed intersection context.
+         * @param ray the primary ray
+         * @param scene
+         * @param depth the current recursive depth
+         * @param ctx the already computed intersection context
+         * @param mat_idx the material index of the hit triangle
+         * @return vector containing the color information
+         */
+        Vector3df shade(Ray3df& ray, Scene& scene, int depth,
+                        const Intersection_Context<float, 3>& ctx, int mat_idx);
         /**
          * @brief Getter for frame buffer
          * @return framebuffer

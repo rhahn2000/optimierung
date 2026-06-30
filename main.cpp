@@ -7,6 +7,7 @@
 #include <iostream>
 #include <chrono>
 #include <cmath>
+#include <vector>
 
 #ifndef DATA_PATH
 #define DATA_PATH "data/"
@@ -40,6 +41,14 @@ static double render_timed(Raytracer& rt, Camera& cam, Scene& scene)
 {
     auto t0 = std::chrono::high_resolution_clock::now();
     rt.render(cam, scene);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration<double>(t1 - t0).count();
+}
+
+static double render_scalar_timed(Raytracer& rt, Camera& cam, Scene& scene)
+{
+    auto t0 = std::chrono::high_resolution_clock::now();
+    rt.render_scalar(cam, scene);
     auto t1 = std::chrono::high_resolution_clock::now();
     return std::chrono::duration<double>(t1 - t0).count();
 }
@@ -94,25 +103,49 @@ int main() {
     }
 
     // -----------------------------------------------------------------------
-    // Render + timing  (render() uses intersect_kdtree internally)
+    // Render + timing across multiple resolutions: scalar (no AVX) vs packet (AVX)
     // -----------------------------------------------------------------------
-    const int W = 800, H = 600;
-    const float aspect = static_cast<float>(W) / H;
-
-    Camera camera(
-        Vector3df{ 0.0f,  5.0f, -12.0f },
-        Vector3df{ 0.0f,  1.0f,  -1.0f },
-        Vector3df{ 0.0f,  1.0f,   0.0f },
-        45.0f, aspect
-    );
-
-    std::cout << "\nStarting render [KD-Tree]...\n";
-    Raytracer rt(W, H, 5);
-    double t = render_timed(rt, camera, scene);
-    print_time("KD-Tree", t);
+    struct Resolution { int width; int height; };
+    std::vector<Resolution> resolutions = {
+        {200, 150},
+        {400, 300},
+        {640, 480},
+        {800, 600}
+    };
 
     ImageWriter writer;
-    writer.write_ppm("raytracer_output.ppm", rt.getFramebuffer(), W, H);
+
+    std::cout << "\n=========================================================\n";
+    std::cout << "Resolution benchmark: scalar KD-Tree vs AVX packet tracing\n";
+    std::cout << "=========================================================\n";
+
+    for (const Resolution& res : resolutions) {
+        const float aspect = static_cast<float>(res.width) / res.height;
+
+        Camera camera(
+            Vector3df{ 0.0f,  5.0f, -12.0f },
+            Vector3df{ 0.0f,  1.0f,  -1.0f },
+            Vector3df{ 0.0f,  1.0f,   0.0f },
+            45.0f, aspect
+        );
+
+        std::cout << "\n--- Resolution " << res.width << "x" << res.height << " ---\n";
+
+        Raytracer rt_scalar(res.width, res.height, 5);
+        double t_scalar = render_scalar_timed(rt_scalar, camera, scene);
+        print_time("scalar", t_scalar);
+
+        Raytracer rt_packet(res.width, res.height, 5);
+        double t_packet = render_timed(rt_packet, camera, scene);
+        print_time("packet", t_packet);
+
+        double speedup = t_scalar / t_packet;
+        std::cout << "Speedup (scalar / packet): " << speedup << "x\n";
+
+        std::string suffix = std::to_string(res.width) + "x" + std::to_string(res.height);
+        writer.write_ppm("raytracer_scalar_" + suffix + ".ppm", rt_scalar.getFramebuffer(), res.width, res.height);
+        writer.write_ppm("raytracer_packet_" + suffix + ".ppm", rt_packet.getFramebuffer(), res.width, res.height);
+    }
 
     return 0;
 }

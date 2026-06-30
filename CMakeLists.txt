@@ -19,6 +19,7 @@ add_executable(
     core/Raytracer.cc 
     core/AABB.cc
     core/KDTree.cc
+    core/RayPacket.cc
 )
 
 enable_testing()

@@ -1,4 +1,5 @@
 #include "Raytracer.h"
+#include "RayPacket.h"
 #include <algorithm>
 #include <cmath>
 
@@ -8,14 +9,53 @@ Raytracer::Raytracer(int width, int height, int max_depth)
 {
 }
 
-void Raytracer::render(Camera cam, Scene& scene) {
+void Raytracer::render_scalar(Camera cam, Scene& scene) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float u = static_cast<float>(x) / (width  - 1);
             float v = static_cast<float>(height - 1 - y) / (height - 1);
-
             Ray3df ray = cam.get_ray(u, v);
             framebuffer[y * width + x] = trace(ray, scene, max_depth);
+        }
+    }
+}
+
+void Raytracer::render(Camera cam, Scene& scene) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x += 8) {
+
+            // collect up to 8 rays
+            Ray3df rays[8];
+            int count = 0;
+            for (int i = 0; i < 8; ++i) {
+                int px = std::min(x + i, width - 1);
+                float u = static_cast<float>(px) / (width - 1);
+                float v = static_cast<float>(height - 1 - y) / (height - 1);
+                rays[i] = cam.get_ray(u, v);
+                if (px == x + i) count = i + 1;
+            }
+
+            // pack all 8 rays into AVX registers
+            RayPacket packet;
+            packet.set_rays(rays);
+
+            // test all 8 rays against the kd-tree simultaneously
+            Intersection_Context<float, 3> contexts[8];
+            int mat_indices[8];
+            for (int i = 0; i < 8; ++i) mat_indices[i] = -1;
+
+            int hit_mask = scene.intersect_packet(packet, (1 << count) - 1, contexts, mat_indices);
+
+            // shade each valid pixel using the context already found by the packet
+            for (int i = 0; i < count; ++i) {
+                int px = x + i;
+                if (hit_mask & (1 << i)) {
+                    framebuffer[y * width + px] = shade(rays[i], scene, max_depth,
+                                                        contexts[i], mat_indices[i]);
+                } else {
+                    framebuffer[y * width + px] = {0.2f, 0.2f, 0.2f};
+                }
+            }
         }
     }
 }
@@ -99,20 +139,13 @@ static float schlick(float cos_theta, float eta1, float eta2) {
     return r0 + (1.0f - r0) * std::pow(1.0f - cos_theta, 5.0f);
 }
 
-Vector3df Raytracer::trace(Ray3df& ray, Scene& scene, int depth) {
+// Shades a ray given an already computed intersection context.
+Vector3df Raytracer::shade(Ray3df& ray, Scene& scene, int depth,
+                            const Intersection_Context<float, 3>& ctx, int mat_idx) {
     const Vector3df BACKGROUND{0.2f, 0.2f, 0.2f};
     const float EPSILON = 1e-3f;
 
-    if (depth == 0) {
-        return BACKGROUND;
-    }
-
-    Intersection_Context<float, 3> ctx;
-    int mat_idx = -1;
-
-    if (!scene.intersect_kdtree(ray, ctx, mat_idx)) {
-        return BACKGROUND;
-    }
+    if (depth == 0) return BACKGROUND;
 
     const Material& mat = scene.getMaterial(mat_idx);
     Vector3df color{0.0f, 0.0f, 0.0f};
@@ -165,4 +198,18 @@ Vector3df Raytracer::trace(Ray3df& ray, Scene& scene, int depth) {
     color[2] = std::min(color[2], 1.0f);
 
     return color;
+}
+
+// Traces a single ray
+Vector3df Raytracer::trace(Ray3df& ray, Scene& scene, int depth) {
+    const Vector3df BACKGROUND{0.2f, 0.2f, 0.2f};
+
+    if (depth == 0) return BACKGROUND;
+
+    Intersection_Context<float, 3> ctx;
+    int mat_idx = -1;
+
+    if (!scene.intersect_kdtree(ray, ctx, mat_idx)) return BACKGROUND;
+
+    return shade(ray, scene, depth, ctx, mat_idx);
 }

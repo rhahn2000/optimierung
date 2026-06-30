@@ -23,7 +23,6 @@ namespace
     protected:
         std::vector<Triangle3df> triangles;
         std::vector<Vector3df>   va, vb, vc;
-        KDTree                   tree;
 
         void SetUp() override
         {
@@ -40,11 +39,16 @@ namespace
             Vector3df b2{ 5.0f, -1.0f, -3.0f};
             Vector3df c2{ 4.0f,  1.0f, -3.0f};
             triangles.emplace_back(a2, b2, c2);
-            va.push_back(a2);
-            vb.push_back(b2);
+            va.push_back(a2); 
+            vb.push_back(b2); 
             vc.push_back(c2);
+        }
 
-            tree.build(triangles, va, vb, vc);
+        KDTree make_tree() const
+        {
+            KDTree tree(triangles, va, vb, vc);
+            tree.build();
+            return tree;
         }
     };
 
@@ -62,7 +66,6 @@ namespace
     protected:
         std::vector<Triangle3df> triangles;
         std::vector<Vector3df>   va, vb, vc;
-        KDTree                   tree;
 
         void SetUp() override
         {
@@ -77,7 +80,13 @@ namespace
                 vb.push_back(b);
                 vc.push_back(c);
             }
-            tree.build(triangles, va, vb, vc);
+        }
+
+        KDTree make_tree() const
+        {
+            KDTree tree(triangles, va, vb, vc);
+            tree.build();
+            return tree;
         }
     };
 
@@ -95,7 +104,6 @@ namespace
     protected:
         std::vector<Triangle3df> triangles;
         std::vector<Vector3df>   va, vb, vc;
-        KDTree                   tree;
 
         void SetUp() override
         {
@@ -110,7 +118,13 @@ namespace
                 vb.push_back(b);
                 vc.push_back(c);
             }
-            tree.build(triangles, va, vb, vc);
+        }
+
+        KDTree make_tree() const
+        {
+            KDTree tree(triangles, va, vb, vc);
+            tree.build();
+            return tree;
         }
     };
 
@@ -121,7 +135,9 @@ namespace
     // tests whether the default constructor does not throw
     TEST(KDTreeTest, DefaultConstructorDoesNotThrow)
     {
-        EXPECT_NO_THROW(KDTree());
+        std::vector<Triangle3df> triangles;
+        std::vector<Vector3df>   va, vb, vc;
+        EXPECT_NO_THROW(KDTree(triangles, va, vb, vc));
     }
 
     // ================================================================
@@ -138,8 +154,8 @@ namespace
         Vector3df c{ 0.0f,  1.0f, -3.0f};
         triangles.emplace_back(a, b, c);
         va.push_back(a); vb.push_back(b); vc.push_back(c);
-        KDTree tree;
-        EXPECT_NO_THROW(tree.build(triangles, va, vb, vc));
+        KDTree tree(triangles, va, vb, vc);
+        EXPECT_NO_THROW(tree.build());
     }
 
     // tests whether build with multiple triangles does not throw
@@ -156,8 +172,8 @@ namespace
             triangles.emplace_back(a, b, c);
             va.push_back(a); vb.push_back(b); vc.push_back(c);
         }
-        KDTree tree;
-        EXPECT_NO_THROW(tree.build(triangles, va, vb, vc));
+        KDTree tree(triangles, va, vb, vc);
+        EXPECT_NO_THROW(tree.build());
     }
 
     // tests whether build with an empty triangle list does not throw
@@ -165,8 +181,8 @@ namespace
     {
         std::vector<Triangle3df> triangles;
         std::vector<Vector3df>   va, vb, vc;
-        KDTree tree;
-        EXPECT_NO_THROW(tree.build(triangles, va, vb, vc));
+        KDTree tree(triangles, va, vb, vc);
+        EXPECT_NO_THROW(tree.build());
     }
 
     // tests whether build can be called multiple times without throwing
@@ -179,9 +195,9 @@ namespace
         Vector3df c{ 0.0f,  1.0f, -3.0f};
         triangles.emplace_back(a, b, c);
         va.push_back(a); vb.push_back(b); vc.push_back(c);
-        KDTree tree;
-        tree.build(triangles, va, vb, vc);
-        EXPECT_NO_THROW(tree.build(triangles, va, vb, vc));
+        KDTree tree(triangles, va, vb, vc);
+        tree.build();
+        EXPECT_NO_THROW(tree.build());
     }
 
     // ================================================================
@@ -191,7 +207,9 @@ namespace
     // tests whether intersect on an unbuilt tree does not throw
     TEST(KDTreeTest, IntersectUnbuiltTreeDoesNotThrow)
     {
-        KDTree tree;
+        std::vector<Triangle3df> triangles;
+        std::vector<Vector3df>   va, vb, vc;
+        KDTree tree(triangles, va, vb, vc);
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
@@ -201,12 +219,13 @@ namespace
     // tests whether intersect on an unbuilt tree returns false
     TEST(KDTreeTest, IntersectUnbuiltTreeReturnsFalse)
     {
-        KDTree tree;
+        std::vector<Triangle3df> triangles;
+        std::vector<Vector3df>   va, vb, vc;
+        KDTree tree(triangles, va, vb, vc);
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
-        bool hit = tree.intersect(ray, ctx, mat_index);
-        EXPECT_FALSE(hit);
+        EXPECT_FALSE(tree.intersect(ray, ctx, mat_index));
     }
 
     // ================================================================
@@ -218,8 +237,8 @@ namespace
     {
         std::vector<Triangle3df> triangles;
         std::vector<Vector3df>   va, vb, vc;
-        KDTree tree;
-        tree.build(triangles, va, vb, vc);
+        KDTree tree(triangles, va, vb, vc);
+        tree.build();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
@@ -231,13 +250,12 @@ namespace
     {
         std::vector<Triangle3df> triangles;
         std::vector<Vector3df>   va, vb, vc;
-        KDTree tree;
-        tree.build(triangles, va, vb, vc);
+        KDTree tree(triangles, va, vb, vc);
+        tree.build();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
-        bool hit = tree.intersect(ray, ctx, mat_index);
-        EXPECT_FALSE(hit);
+        EXPECT_FALSE(tree.intersect(ray, ctx, mat_index));
     }
 
     // ================================================================
@@ -247,16 +265,17 @@ namespace
     // tests whether a ray aimed at the triangle reports a hit
     TEST_F(KDTreeSingleTriangleTest, IntersectSingleTriangleHit)
     {
+        KDTree tree = make_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
-        bool hit = tree.intersect(ray, ctx, mat_index);
-        EXPECT_TRUE(hit);
+        EXPECT_TRUE(tree.intersect(ray, ctx, mat_index));
     }
 
     // tests whether a hit sets mat_index to a valid (non-negative) value
     TEST_F(KDTreeSingleTriangleTest, IntersectHitSetsMaterialIndex)
     {
+        KDTree tree = make_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
@@ -271,22 +290,21 @@ namespace
     // tests whether a ray that misses the triangle returns false
     TEST_F(KDTreeSingleTriangleTest, IntersectSingleTriangleMiss)
     {
+        KDTree tree = make_tree();
         Ray3df ray{{10.0f, 10.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
-        bool hit = tree.intersect(ray, ctx, mat_index);
-        EXPECT_FALSE(hit);
+        EXPECT_FALSE(tree.intersect(ray, ctx, mat_index));
     }
 
     // tests whether a ray pointing away from the triangle returns false
     TEST_F(KDTreeSingleTriangleTest, IntersectRayPointingAwayReturnsFalse)
     {
-        // triangle is at z=-3, ray points in +z direction away from it
+        KDTree tree = make_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
-        bool hit = tree.intersect(ray, ctx, mat_index);
-        EXPECT_FALSE(hit);
+        EXPECT_FALSE(tree.intersect(ray, ctx, mat_index));
     }
 
     // ================================================================
@@ -296,27 +314,27 @@ namespace
     // tests whether a hit is detected in a tree with multiple triangles
     TEST_F(KDTreeMultipleTrianglesTest, IntersectMultipleTrianglesHit)
     {
+        KDTree tree = make_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
-        bool hit = tree.intersect(ray, ctx, mat_index);
-        EXPECT_TRUE(hit);
+        EXPECT_TRUE(tree.intersect(ray, ctx, mat_index));
     }
 
     // tests whether a miss is correctly reported in a tree with multiple triangles
     TEST_F(KDTreeMultipleTrianglesTest, IntersectMultipleTrianglesMiss)
     {
+        KDTree tree = make_tree();
         Ray3df ray{{10.0f, 10.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
-        bool hit = tree.intersect(ray, ctx, mat_index);
-        EXPECT_FALSE(hit);
+        EXPECT_FALSE(tree.intersect(ray, ctx, mat_index));
     }
 
     // tests whether the nearest triangle is hit (not one behind it)
     TEST_F(KDTreeMultipleTrianglesTest, IntersectMultipleTrianglesReturnsNearest)
     {
-        // triangles are at z = -2, -4, -6, ... — the nearest is index 0 (z=-2)
+        KDTree tree = make_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
@@ -337,11 +355,11 @@ namespace
     // tests whether a ray still hits after the early-exit leaf path was taken
     TEST_F(KDTreeIdenticalTrianglesTest, IntersectIdenticalTrianglesHit)
     {
+        KDTree tree = make_tree();
         Ray3df ray{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
-        bool hit = tree.intersect(ray, ctx, mat_index);
-        EXPECT_TRUE(hit);
+        EXPECT_TRUE(tree.intersect(ray, ctx, mat_index));
     }
 
     // ================================================================
@@ -351,13 +369,11 @@ namespace
     // tests whether the normal is flipped when ray hits triangle from behind
     TEST_F(KDTreeSingleTriangleTest, IntersectBackfaceNormalPointsTowardRay)
     {
-        // triangle is at z=-3, ray comes from z=-5 pointing in +z — hits from behind
+        KDTree tree = make_tree();
         Ray3df ray{{0.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 1.0f}};
         Intersection_Context<float, 3> ctx;
         int mat_index = -1;
         ASSERT_TRUE(tree.intersect(ray, ctx, mat_index));
-
-        // normal must point against the ray direction after flip
         float dot = ctx.normal * ray.direction;
         EXPECT_LT(dot, 0.0f);
     }

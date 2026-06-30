@@ -116,8 +116,13 @@ bool Scene::intersect_kdtree(Ray3df& ray, Intersection_Context<float, 3>& contex
     return kd_tree.intersect(ray, context, mat_index);
 }
 
+int Scene::intersect_packet(const RayPacket& packet, int active_mask,
+                             Intersection_Context<float, 3> contexts[8], int mat_indices[8]) {
+    return kd_tree.intersect_packet(packet, active_mask, contexts, mat_indices);
+}
+
 void Scene::build_kd_tree() {
-    kd_tree.build(triangles, vertices_a, vertices_b, vertices_c);
+    kd_tree.build();
 }
 
 const std::vector<Light>& Scene::getLights() const {
