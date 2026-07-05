@@ -1,5 +1,8 @@
 # Bericht
 
+## 05/07/2026
+- Bug gefixt (Doppelter intersect Aufruf in intersect_recursive_packet)
+
 ## 29/06/26
 - Feedback implementiert
 - Bug (fehlende Reflexion und Transmission) beim Rendern mit KD-Baum gefixt
