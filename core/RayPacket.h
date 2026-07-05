@@ -35,9 +35,11 @@ struct RayPacket
     /**
      * @brief intersect method for ray packet with mt
      * @param out_t intersection distance
+     * @param out_u barycentric u coordinate of the hit
+     * @param out_v barycentric v coordinate of the hit
      * @return bitmask
      */
-    int intersect_mt(const Triangle3df &triangle, __m256 &out_t) const;
+    int intersect_mt(const Triangle3df &triangle, __m256 &out_t, __m256 &out_u, __m256 &out_v) const;
 };
 
 #endif // RAY_PACKET_H

@@ -233,8 +233,8 @@ namespace
         }
 
         RayPacket p = make_packet(rays);
-        __m256 out_t;
-        int mask = p.intersect_mt(triangle, out_t);
+        __m256 out_t, out_u, out_v;
+        int mask = p.intersect_mt(triangle, out_t, out_u, out_v);
 
         EXPECT_EQ(0xFF, mask);
     }
@@ -252,8 +252,8 @@ namespace
         }
 
         RayPacket p = make_packet(rays);
-        __m256 out_t;
-        int mask = p.intersect_mt(triangle, out_t);
+        __m256 out_t, out_u, out_v;
+        int mask = p.intersect_mt(triangle, out_t, out_u, out_v);
 
         EXPECT_EQ(0x00, mask);
     }
@@ -271,8 +271,8 @@ namespace
         }
 
         RayPacket p = make_packet(rays);
-        __m256 out_t;
-        p.intersect_mt(triangle, out_t);
+        __m256 out_t, out_u, out_v;
+        int mask = p.intersect_mt(triangle, out_t, out_u, out_v);
 
         float t_vals[8];
         _mm256_storeu_ps(t_vals, out_t);
@@ -296,8 +296,8 @@ namespace
         }
 
         RayPacket p = make_packet(rays);
-        __m256 out_t;
-        int mask = p.intersect_mt(triangle, out_t);
+        __m256 out_t, out_u, out_v;
+        int mask = p.intersect_mt(triangle, out_t, out_u, out_v);
 
         EXPECT_EQ(0x00, mask);
     }
@@ -321,8 +321,8 @@ namespace
         rays[7].origin = {5.0f, 5.0f, 5.0f};
 
         RayPacket p = make_packet(rays);
-        __m256 out_t;
-        int mask = p.intersect_mt(triangle, out_t);
+        __m256 out_t, out_u, out_v;
+        int mask = p.intersect_mt(triangle, out_t, out_u, out_v);
 
         EXPECT_EQ(0x0F, mask);
     }

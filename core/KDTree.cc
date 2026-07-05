@@ -213,12 +213,20 @@ int KDTree::intersect_recursive_packet(const KDNode* node, const RayPacket& pack
         for (int idx : node->triangle_indices) {
             const Triangle3df& tri = scene_triangles[idx];
 
-            __m256 out_t;
-            int tri_mask = packet.intersect_mt(tri, out_t) & active_mask;
+            __m256 out_t, out_u, out_v;
+            int tri_mask = packet.intersect_mt(tri, out_t, out_u, out_v) & active_mask;
             if (!tri_mask) continue;
 
-            float t_vals[8];
+            float t_vals[8], u_vals[8], v_vals[8];
             _mm256_storeu_ps(t_vals, out_t);
+            _mm256_storeu_ps(u_vals, out_u);
+            _mm256_storeu_ps(v_vals, out_v);
+
+            // flat face normal - computed once per triangle, not per ray
+            Vector3df edge1 = v_b[idx] - v_a[idx];
+            Vector3df edge2 = v_c[idx] - v_a[idx];
+            Vector3df face_normal = edge1.cross_product(edge2);
+            face_normal.normalize();
 
             for (int i = 0; i < 8; ++i) {
                 if (!(tri_mask & (1 << i))) continue;
@@ -228,14 +236,16 @@ int KDTree::intersect_recursive_packet(const KDNode* node, const RayPacket& pack
                 if (t_vals[i] > 1e-4f && t_vals[i] < closest_t[i]) {
                     closest_t[i] = t_vals[i];
 
-                    Ray3df ray_i;
-                    ray_i.origin    = { origin_x[i],    origin_y[i],    origin_z[i] };
-                    ray_i.direction = { direction_x[i], direction_y[i], direction_z[i] };
+                    Vector3df origin_i    = { origin_x[i],    origin_y[i],    origin_z[i] };
+                    Vector3df direction_i = { direction_x[i], direction_y[i], direction_z[i] };
 
                     Intersection_Context<float, 3> tmp{};
-                    tri.intersects(ray_i, tmp);
-                    tmp.normal.normalize();
-                    if (tmp.normal * ray_i.direction > 0.0f)
+                    tmp.t            = t_vals[i];
+                    tmp.u            = u_vals[i];
+                    tmp.v            = v_vals[i];
+                    tmp.intersection = origin_i + t_vals[i] * direction_i;
+                    tmp.normal       = face_normal;
+                    if (tmp.normal * direction_i > 0.0f)
                         tmp.normal *= -1.0f;
 
                     contexts[i]    = tmp;

@@ -131,11 +131,11 @@ int main() {
 
         std::cout << "\n--- Resolution " << res.width << "x" << res.height << " ---\n";
 
-        Raytracer rt_scalar(res.width, res.height, 5);
+        Raytracer rt_scalar(res.width, res.height, 3);
         double t_scalar = render_scalar_timed(rt_scalar, camera, scene);
         print_time("scalar", t_scalar);
 
-        Raytracer rt_packet(res.width, res.height, 5);
+        Raytracer rt_packet(res.width, res.height, 3);
         double t_packet = render_timed(rt_packet, camera, scene);
         print_time("packet", t_packet);
 

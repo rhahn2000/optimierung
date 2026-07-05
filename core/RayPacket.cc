@@ -63,7 +63,7 @@ int RayPacket::intersect_aabb(const AABB &aabb, __m256 &t_min, __m256 &t_max) co
     return _mm256_movemask_ps(_mm256_cmp_ps(t_max, t_min, _CMP_GE_OQ));
 }
 
-int RayPacket::intersect_mt(const Triangle3df &triangle, __m256 &out_t) const
+int RayPacket::intersect_mt(const Triangle3df &triangle, __m256 &out_t, __m256 &out_u, __m256 &out_v) const
 {
     // define struct to get data of triangle3df
     struct TriangleAccessor : Triangle3df
@@ -148,6 +148,9 @@ int RayPacket::intersect_mt(const Triangle3df &triangle, __m256 &out_t) const
                                                       _mm256_mul_ps(edge_2_z, qz)));
     out_t = _mm256_mul_ps(e2dotq, inv_det);
     active = _mm256_and_ps(active, _mm256_cmp_ps(out_t, zero, _CMP_GT_OQ));
+
+    out_u = u;
+    out_v = v;
 
     return _mm256_movemask_ps(active);
 }
